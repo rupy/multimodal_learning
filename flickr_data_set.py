@@ -19,6 +19,7 @@ class FlickrDataSet:
 
     def __init__(self, annotation_dir_path, dataset_dir_path):
 
+        # log setting
         program = os.path.basename(sys.argv[0])
         self.logger = logging.getLogger(program)
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
@@ -27,6 +28,8 @@ class FlickrDataSet:
         self.dataset_dir_path = dataset_dir_path
         self.annotation_df = None
         self.tag_dict = defaultdict(list)
+
+        self.features_mat = None
 
     """
     annotation
@@ -91,7 +94,6 @@ class FlickrDataSet:
     def __get_tags_from_tag_file_by_id(self, img_id, tags_raw=False):
 
         file_name = 'tags%d.txt' % img_id
-        file_name = 'tags%d.txt' % img_id
         tag_path = (self.dataset_dir_path + 'meta/tags_raw/' + file_name) if tags_raw else (self.dataset_dir_path + 'meta/tags/' + file_name)
         f = open(tag_path)
         tags = f.read().strip().split('\r\n')
@@ -118,7 +120,25 @@ class FlickrDataSet:
             self.logger.info("Image ID: %d / %d %d%% %s" % (img_id, FlickrDataSet.DATASET_SIZE, img_id * 100 / FlickrDataSet.DATASET_SIZE, tags_vocab))
         return self.tag_dict
 
-    def save_tag_dict_as_json(self, filename):
+    def save_tag_dict_as_json(self, filename='tags_dict.json'):
         f = open(filename, 'w')
         json.dump(self.tag_dict, f)
         f.close()
+
+    def load_tag_dict_as_json(self, filename):
+        f = open(filename, 'r')
+        self.tag_dict = json.load(f)
+        f.close()
+        return self.tag_dict
+
+    def load_features(self, feature_path):
+        self.features_mat = np.load(feature_path)
+
+    def create_avg_features_df(self):
+        tag_dict_avg = {
+            tag: np.average(self.features_mat[np.array(ids) - 1], axis=0).tolist()  # average all features for each tag
+            for tag, ids in self.tag_dict.items()
+        }
+        self.tag_df_avg = pd.DataFrame(tag_dict_avg)
+        return self.tag_df_avg
+

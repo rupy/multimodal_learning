@@ -11,15 +11,18 @@ import logging
 import sys
 import os.path
 import multiprocessing
+import pandas as pd
 
 class Word2VecUtil:
 
     def __init__(self):
+        # log setting
         program = os.path.basename(sys.argv[0])
         self.logger = logging.getLogger(program)
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
 
         self.model = None
+        self.word_vector_df = None
 
     def learn_word2vec(self, corpus_file, save_file=None):
         self.logger.info("reading corpus file")
@@ -48,9 +51,15 @@ class Word2VecUtil:
         labels = np.array([word] + [x[0] for x in out])
         return matrix, labels
 
-    def build_matrix(self):
-        matrix = np.array([ self.model[word] for word in self.model.vocab.keys()])
-        return matrix
+    def create_word_vector_df(self, vocab_list=None):
+        word_dict = None
+        if vocab_list:
+            word_dict = {word: self.model[word] for word in vocab_list}
+        else:
+            word_dict = {word: self.model[word] for word in self.model.vocab.keys()}
+        self.word_vector_df = pd.DataFrame(word_dict)
+        return self.word_vector_df
+
 
     def plot_pca_data(self, X, labels):
 
