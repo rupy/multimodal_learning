@@ -35,7 +35,7 @@ class Word2VecUtil:
         self.logger.info("finished word2vec learning")
 
     def load_model(self, save_file):
-        self.logger.info("loading data")
+        self.logger.info("loading model data")
         self.model = word2vec.Word2Vec.load(save_file)
         return self.model
 
@@ -59,6 +59,14 @@ class Word2VecUtil:
             word_dict = {word: self.model[word] for word in self.model.vocab.keys()}
         self.word_vector_df = pd.DataFrame(word_dict)
         return self.word_vector_df
+
+    def save_word_vector_df(self, filepath):
+        self.logger.info("saving word vector data frame as picle")
+        self.word_vector_df.to_pickle(filepath)
+
+    def load_word_vector_df(self, filepath):
+        self.logger.info("loading word vector data frame")
+        self.word_vector_df = pd.read_pickle(filepath)
 
 
     def plot_pca_data(self, X, labels):
@@ -92,3 +100,4 @@ class Word2VecUtil:
         X_1_2 = np.r_[X, X2]
         labels_1_2 = np.r_[labels, labels2]
         self.plot_pca_data(X_1_2, labels_1_2)
+

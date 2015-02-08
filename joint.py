@@ -9,13 +9,14 @@ import logging
 import os
 import sys
 import yaml
-import numpy as np
-import pandas as pd
 
 
 class Joint:
 
-    CONFIG_YAML = "config.yml"
+    CONFIG_YAML = 'config.yml'
+    TAG_DICT_JSON ='tags_dict.json'
+    FEATURE_PICKLE ='image_feature.pkl'
+    WORDVECTOR_PICKLE ='word_vector.pkl'
 
     def __init__(self):
 
@@ -53,10 +54,10 @@ class Joint:
 
     def save_flickr_tag_json(self):
         self.flickr.create_tag_dict(False, self.word2vec.model.vocab.keys())
-        self.flickr.save_tag_dict_as_json()
+        self.flickr.save_tag_dict_as_json(Joint.TAG_DICT_JSON)
 
     def load_flickr_tag_json(self):
-        return self.flickr.load_tag_dict_as_json()
+        return self.flickr.load_tag_dict_as_json(Joint.TAG_DICT_JSON)
 
     def load_features(self):
         self.flickr.load_features(self.feature_path)
@@ -68,3 +69,14 @@ class Joint:
         vocab_list = self.flickr.tag_dict.keys()
         return self.word2vec.create_word_vector_df(vocab_list)
 
+    def save_image_features(self):
+        self.flickr.save_avg_features_df(Joint.FEATURE_PICKLE)
+
+    def save_word_vector(self):
+        self.word2vec.save_word_vector_df(Joint.WORDVECTOR_PICKLE)
+
+    def load_image_features(self):
+        self.flickr.load_avg_features_df(Joint.FEATURE_PICKLE)
+
+    def load_word_vector(self):
+        self.word2vec.load_word_vector_df(Joint.WORDVECTOR_PICKLE)

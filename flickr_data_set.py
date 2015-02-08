@@ -30,6 +30,7 @@ class FlickrDataSet:
         self.tag_dict = defaultdict(list)
 
         self.features_mat = None
+        self.feature_avg_df = None
 
     """
     annotation
@@ -107,6 +108,7 @@ class FlickrDataSet:
         self.plot_img_by_id(img_id)
 
     def create_tag_dict(self, tags_raw=False, vocab_set=None):
+        self.logger.info("creating tag dictionary")
         for i in xrange(FlickrDataSet.DATASET_SIZE):
             img_id = i + 1
             file_name = 'tags%d.txt' % img_id
@@ -120,25 +122,37 @@ class FlickrDataSet:
             self.logger.info("Image ID: %d / %d %d%% %s" % (img_id, FlickrDataSet.DATASET_SIZE, img_id * 100 / FlickrDataSet.DATASET_SIZE, tags_vocab))
         return self.tag_dict
 
-    def save_tag_dict_as_json(self, filename='tags_dict.json'):
+    def save_tag_dict_as_json(self, filename):
+        self.logger.info("saving tag dictionary as json")
         f = open(filename, 'w')
         json.dump(self.tag_dict, f)
         f.close()
 
     def load_tag_dict_as_json(self, filename):
+        self.logger.info("loading tag dictionary")
         f = open(filename, 'r')
         self.tag_dict = json.load(f)
         f.close()
         return self.tag_dict
 
     def load_features(self, feature_path):
+        self.logger.info("loading features")
         self.features_mat = np.load(feature_path)
 
     def create_avg_features_df(self):
+        self.logger.info("creating avg features as dataframe")
         tag_dict_avg = {
             tag: np.average(self.features_mat[np.array(ids) - 1], axis=0).tolist()  # average all features for each tag
             for tag, ids in self.tag_dict.items()
         }
-        self.tag_df_avg = pd.DataFrame(tag_dict_avg)
-        return self.tag_df_avg
+        self.feature_avg_df = pd.DataFrame(tag_dict_avg)
+        return self.feature_avg_df
+
+    def save_avg_features_df(self, filepath):
+        self.logger.info("saving avg features as dataframe")
+        self.feature_avg_df.to_pickle(filepath)
+
+    def load_avg_features_df(self, filepath):
+        self.logger.info("loading avg features as dataframe")
+        self.feature_avg_df = pd.read_pickle(filepath)
 
