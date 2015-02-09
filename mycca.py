@@ -9,6 +9,10 @@ import time
 import logging
 import os
 import sys
+try:
+   import cPickle as pickle
+except:
+   import pickle
 
 class MyCCA(object):
 
@@ -113,7 +117,18 @@ class MyCCA(object):
         self.fit(x, y)
         return self.transform(x, y)
 
+    def save_params_as_pickle(self, filename):
+        data = (self.n_components, self.reg_param, self.x_weights_ , self.x_eigvals_, self.y_weights_, self.y_eigvals_, self.calc_time)
+        self.logger.info("saving cca")
+        f = open(filename, 'wb')
+        pickle.dump(data, f)
+        f.close()
 
+    def load_params_from_pickle(self, filename):
+        self.logger.info("loading cca")
+        f = open(filename, 'rb')
+        self.n_components, self.reg_param, self.x_weights_ , self.x_eigvals_, self.y_weights_, self.y_eigvals_, self.calc_time = pickle.load(f)
+        f.close()
 
 if __name__=="__main__":
 
