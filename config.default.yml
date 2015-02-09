@@ -7,3 +7,5 @@ flickr_dataset:
     tag_dir_path: /path/to/mirflickr/
 features:
     image_feature_path: /path/to/features.npy
+tmp_data:
+    tmp_dir_path:  /path/to/tmp_data/
