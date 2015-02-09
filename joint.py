@@ -15,8 +15,6 @@ try:
    import cPickle as pickle
 except:
    import pickle
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
 
 
 class Joint:
@@ -102,26 +100,6 @@ class Joint:
             np.save(self.tmp_dir_path + 'cca_' + str(n) + 'x.npy', x_c)
             np.save(self.tmp_dir_path + 'cca_' + str(n) + 'y.npy', y_c)
 
-    def plot_cca(self, X, Y):
-        # PCA
-        pca = PCA(n_components=2)
-        X_r = pca.fit(X).transform(X)
-        Y_r = pca.fit(Y).transform(Y)
-
-        # begin plot
-        plt.figure()
-
-        plt.subplot(221)
-        plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
-        plt.plot(X_r[:, 0], X_r[:, 1], '.r')
-        plt.title('PCA - CCA XY')
-
-        plt.subplot(222)
-        plt.plot(X_r[:, 0], X_r[:, 1], '.r')
-        plt.title('PCA - CCA X')
-
-        plt.subplot(223)
-        plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
-        plt.title('PCA - CCA Y')
-
-        plt.show()
+    def plot_cca_result(self):
+        x_c, y_c = self.load_cca_result()
+        self.cca.plot_cca_result(x_c, y_c)

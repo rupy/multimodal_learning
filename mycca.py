@@ -13,6 +13,8 @@ try:
    import cPickle as pickle
 except:
    import pickle
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
 
 class MyCCA(object):
 
@@ -129,6 +131,30 @@ class MyCCA(object):
         f = open(filename, 'rb')
         self.n_components, self.reg_param, self.x_weights_ , self.x_eigvals_, self.y_weights_, self.y_eigvals_, self.calc_time = pickle.load(f)
         f.close()
+
+    def plot_cca_result(self, X, Y):
+        # PCA
+        pca = PCA(n_components=2)
+        X_r = pca.fit(X).transform(X)
+        Y_r = pca.fit(Y).transform(Y)
+
+        # begin plot
+        plt.figure()
+
+        plt.subplot(221)
+        plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
+        plt.plot(X_r[:, 0], X_r[:, 1], '.r')
+        plt.title('CCA XY')
+
+        plt.subplot(222)
+        plt.plot(X_r[:, 0], X_r[:, 1], '.r')
+        plt.title('CCA X')
+
+        plt.subplot(223)
+        plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
+        plt.title('CCA Y')
+
+        plt.show()
 
 if __name__=="__main__":
 
