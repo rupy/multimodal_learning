@@ -9,6 +9,8 @@ import logging
 import os
 import sys
 import yaml
+from mycca import MyCCA
+import numpy as np
 
 
 class Joint:
@@ -52,8 +54,10 @@ class Joint:
     def load_model(self, save_file):
         self.word2vec.load_model(save_file)
 
-    def save_flickr_tag_json(self):
+    def create_tag_dict(self):
         self.flickr.create_tag_dict(False, self.word2vec.model.vocab.keys())
+
+    def save_flickr_tag_json(self):
         self.flickr.save_tag_dict_as_json(Joint.TAG_DICT_JSON)
 
     def load_flickr_tag_json(self):
@@ -80,3 +84,11 @@ class Joint:
 
     def load_word_vector(self):
         self.word2vec.load_word_vector_df(Joint.WORDVECTOR_PICKLE)
+
+    def calc_cca(self):
+        # Reduce dimensions of x, y from 30, 20 to 10 respectively.
+        cca = MyCCA(n_components=10, reg_param=0.1, calc_time=True)
+        x_c, y_c = cca.fit_transform(self.word2vec.word_vector_df.values.T, self.flickr.feature_avg_df.values.T)
+
+        #
+        print np.corrcoef(x_c[:,0], y_c[:,0])

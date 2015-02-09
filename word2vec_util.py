@@ -61,7 +61,7 @@ class Word2VecUtil:
         return self.word_vector_df
 
     def save_word_vector_df(self, filepath):
-        self.logger.info("saving word vector data frame as picle")
+        self.logger.info("saving word vector data frame as pickle")
         self.word_vector_df.to_pickle(filepath)
 
     def load_word_vector_df(self, filepath):
