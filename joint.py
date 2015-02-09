@@ -46,7 +46,7 @@ class Joint:
         # create object
         self.word2vec = Word2VecUtil()
         self.flickr = FlickrDataSet(self.annotation_path, self.tag_path)
-        self.cca = None
+        self.cca = MyCCA(n_components=10, reg_param=0.1, calc_time=True)
 
     def learn_jawiki_corpus(self, save_file):
         self.word2vec.learn_word2vec(self.jawiki_path, save_file)
@@ -57,56 +57,40 @@ class Joint:
     def learn_text8_corpus(self, save_file):
         self.word2vec.learn_word2vec('text8', save_file)
 
-    def load_model(self, save_file):
+    def create_tag_dict(self, save_file):
         self.word2vec.load_model(save_file)
-
-    def create_tag_dict(self):
         self.flickr.create_tag_dict(False, self.word2vec.model.vocab.keys())
-
-    def save_flickr_tag_json(self):
         self.flickr.save_tag_dict_as_json(Joint.TAG_DICT_JSON)
 
-    def load_flickr_tag_json(self):
-        return self.flickr.load_tag_dict_as_json(Joint.TAG_DICT_JSON)
-
-    def load_features(self):
+    def create_feature_matrix(self):
+        self.flickr.load_tag_dict_as_json(Joint.TAG_DICT_JSON)
         self.flickr.load_features(self.feature_path)
 
-    def create_avg_features_df(self):
-        return self.flickr.create_avg_features_df()
-
-    def create_word2vec_features_df(self):
+        self.flickr.create_avg_features_df()
         vocab_list = self.flickr.tag_dict.keys()
-        return self.word2vec.create_word_vector_df(vocab_list)
-
-    def save_image_features(self):
+        self.word2vec.create_word_vector_df(vocab_list)
         self.flickr.save_avg_features_df(Joint.FEATURE_PICKLE)
-
-    def save_word_vector(self):
         self.word2vec.save_word_vector_df(Joint.WORDVECTOR_PICKLE)
 
-    def load_image_features(self):
+    def calc_cca(self):
         self.flickr.load_avg_features_df(Joint.FEATURE_PICKLE)
-
-    def load_word_vector(self):
         self.word2vec.load_word_vector_df(Joint.WORDVECTOR_PICKLE)
-
-    def calc_cca(self, n_components=10, reg_param=0.1):
-        self.cca = MyCCA(n_components=n_components, reg_param=reg_param, calc_time=True)
         self.cca.fit(self.word2vec.word_vector_df.values.T, self.flickr.feature_avg_df.values.T)
+        self.__save_cca()
+        self.__cca_transform_and_save()
 
-    def save_cca(self):
+    def __save_cca(self):
         f = open(Joint.CCA_PICKLE, 'wb')
         pickle.dumps(self.cca, f)
         f.close()
 
-    def load_cca(self):
+    def __load_cca(self):
         f = open(Joint.CCA_PICKLE, 'rb')
         self.cca = pickle.load(f)
         f.close()
 
-    def calc_cca_transform(self):
-        for n in xrange(10, 200, 10):
+    def __cca_transform_and_save(self):
+        for n in xrange(10, 210, 10):
             self.cca.n_components = n
             x_c, y_c = self.cca.transform(self.word2vec.word_vector_df.values.T, self.flickr.feature_avg_df.values.T)
             np.save(self.tmp_dir_path + 'cca_' + str(n) + 'x.npy', x_c)
