@@ -1,0 +1,9 @@
+wiki_corpus:
+    jawiki_path: /path/to/jawikisep.txt
+    enwiki_path: /path/to/jawikisep.txt
+    text8_path: /path/to/text8
+flickr_dataset:
+    annotation_dir_path: /path/to/annotations/
+    tag_dir_path: /path/to/mirflickr/
+features:
+    image_feature_path: /path/to/features.npy
