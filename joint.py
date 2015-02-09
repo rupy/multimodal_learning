@@ -107,24 +107,21 @@ class Joint:
         pca = PCA(n_components=2)
         X_r = pca.fit(X).transform(X)
         Y_r = pca.fit(Y).transform(Y)
+
         # begin plot
         plt.figure()
-        # plot all points(first point is different color)
+
+        plt.subplot(221)
         plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
         plt.plot(X_r[:, 0], X_r[:, 1], '.r')
-        plt.title('PCA - CCA')
-        plt.show()
+        plt.title('PCA - CCA XY')
 
-        # begin plot
-        plt.figure()
-        # plot all points(first point is different color)
-        plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
-        plt.title('PCA - CCA')
-        plt.show()
+        plt.subplot(222)
+        plt.plot(X_r[:, 0], X_r[:, 1], '.r')
+        plt.title('PCA - CCA X')
 
-        # begin plot
-        plt.figure()
-        # plot all points(first point is different color)
+        plt.subplot(223)
         plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
-        plt.title('PCA - CCA')
+        plt.title('PCA - CCA Y')
+
         plt.show()
