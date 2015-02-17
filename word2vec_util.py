@@ -24,11 +24,11 @@ class Word2VecUtil:
         self.model = None
         self.word_vector_df = None
 
-    def learn_word2vec(self, corpus_file, save_file=None):
+    def learn_word2vec(self, corpus_file, save_file=None, size=200):
         self.logger.info("reading corpus file")
         text8 = word2vec.Text8Corpus(corpus_file)
         self.logger.info("learning word2vec")
-        self.model = word2vec.Word2Vec(text8, size=200, window=5, min_count=5, workers=multiprocessing.cpu_count())
+        self.model = word2vec.Word2Vec(text8, size=size, window=5, min_count=5, workers=multiprocessing.cpu_count())
         self.logger.info("saving model data")
         if save_file:
             self.model.save(save_file)
@@ -65,7 +65,7 @@ class Word2VecUtil:
         self.word_vector_df.to_pickle(filepath)
 
     def load_word_vector_df(self, filepath):
-        self.logger.info("loading word vector data frame")
+        self.logger.info("loading word vector dataframe")
         self.word_vector_df = pd.read_pickle(filepath)
 
 

@@ -153,6 +153,6 @@ class FlickrDataSet:
         self.feature_avg_df.to_pickle(filepath)
 
     def load_avg_features_df(self, filepath):
-        self.logger.info("loading avg features as dataframe")
+        self.logger.info("loading avg features dataframe")
         self.feature_avg_df = pd.read_pickle(filepath)
 

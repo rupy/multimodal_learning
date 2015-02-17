@@ -1,10 +1,10 @@
 wiki_corpus:
-    jawiki_path: /path/to/jawikisep.txt
-    enwiki_path: /path/to/jawikisep.txt
-    text8_path: /path/to/text8
+    wiki_path: /path/to/wikisep.txt
 flickr_dataset:
     annotation_dir_path: /path/to/annotations/
     tag_dir_path: /path/to/mirflickr/
+word2vec_model:
+    model_path: /path/to/enwiki_word2vec_200dim.dat
 features:
     image_feature_path: /path/to/features.npy
 tmp_data:
