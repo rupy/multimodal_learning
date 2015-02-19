@@ -74,9 +74,18 @@ class MyCCA(object):
         eig_vals = eig_vals[sort_indices][:eig_dim].real
         eig_vecs = eig_vecs[:,sort_indices][:,:eig_dim].real
 
+        # print np.dot(eig_vecs.T, eig_vecs)
+
         # regularization
         self.logger.info("regularizing")
-        eig_vecs = np.dot(eig_vecs, np.diag(np.reciprocal(np.linalg.norm(eig_vecs, axis=0))))
+        # eig_vecs = np.dot(eig_vecs, np.diag(np.reciprocal(np.linalg.norm(eig_vecs, axis=0))))
+        var = np.dot(eig_vecs.T, np.dot(right, eig_vecs))
+        # print var
+        invvar = np.diag(np.reciprocal(np.sqrt(np.diag(var))))
+        # print invvar
+        eig_vecs = np.dot(eig_vecs, invvar)
+
+        # print np.dot(eig_vecs.T, np.dot(right, eig_vecs))
 
         return eig_vals, eig_vecs
 
@@ -207,7 +216,14 @@ class MyCCA(object):
         f.close()
 
     def check_fit_finished(self):
-        return self.x_weights is not None and self.y_weights is not None and self.eigvals is not None and self.X is not None and self.Y is not None and self.Cxx is not None and self.Cyy is not None and self.Cxy is not None
+        return self.x_weights is not None\
+               and self.y_weights is not None\
+               and self.eigvals is not None\
+               and self.X is not None\
+               and self.Y is not None\
+               and self.Cxx is not None\
+               and self.Cyy is not None\
+               and self.Cxy is not None
 
     def plot_cca_result(self, probabilistic=False):
 
