@@ -60,36 +60,13 @@ class Joint:
 
         self.word2vec.load_model(self.model_path)
 
-    def create_tag_dict(self):
-        """
-        Create tag dictionary. The tag dictionary is saved at the end of calculation.
-        :return: None
-        """
-
-        # preparation check
-        if self.word2vec.model is None:
-            Exception('Word2vec model is not learned. You should run learn_wiki_corpus() or load_model(), first. ')
-
-        # calculation
-        self.flickr.create_tag_dict(False, self.word2vec.model.vocab.keys())
-
-        # save
-        self.flickr.save_tag_dict_as_json(Joint.TAG_DICT_JSON)
-
-    def load_tag_dict(self):
-        """
-        Load tag dictionary. Tag dictionary is created by create_tag_dict().
-        :return: None
-        """
-        self.flickr.load_tag_dict_as_json(Joint.TAG_DICT_JSON)
-
     def load_flickr_features(self):
         """
         Load flickr features. flickr feature is learned by flickr_img2features.py. the file is in 'https://github.com/rupy/caffe_script/blob/master/flickr_img2features.py'.
         :return: None
         """
 
-        self.flickr.load_features(self.feature_path)
+        self.flickr.load_raw_features(self.feature_path)
 
     def create_feature_matrices(self):
         """
@@ -100,19 +77,15 @@ class Joint:
         # preparation check
         if self.word2vec.model is None:
             Exception('Word2vec model is not learned. You should run learn_wiki_corpus() or load_model(), first.')
-        if self.flickr.tag_dict is None:
-            Exception('tag dictionary is not set. You should run create_tag_dict() or load_tag_dict(), first.')
         if self.flickr.features_mat is None:
             Exception('feature matrix is not set. You should run load_flickr_features(), first.')
 
         # calculation
-        self.flickr.create_avg_features_df()
-        vocab_list = self.flickr.tag_dict.keys()
-        self.word2vec.create_word_vector_df(vocab_list)
+        self.word2vec.create_word_features(self.flickr.tag_list)
 
         # save
-        self.flickr.save_avg_features_df(Joint.FEATURE_PICKLE)
-        self.word2vec.save_word_vector_df(Joint.WORDVECTOR_PICKLE)
+        self.flickr.save_img_features(Joint.FEATURE_PICKLE)
+        self.word2vec.save_word_features(Joint.WORDVECTOR_PICKLE)
 
     def load_feature_matrices(self):
         """

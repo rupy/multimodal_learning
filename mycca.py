@@ -84,6 +84,8 @@ class MyCCA(object):
         invvar = np.diag(np.reciprocal(np.sqrt(np.diag(var))))
         # print invvar
         eig_vecs = np.dot(eig_vecs, invvar)
+        print eig_vals
+        exit(0)
 
         # print np.dot(eig_vecs.T, np.dot(right, eig_vecs))
 
@@ -103,7 +105,6 @@ class MyCCA(object):
         Cyy = Cov[p:, p:]
         Cxy = Cov[:p, p:]
         # print Cxx.shape, Cxy.shape, Cyy.shape
-
 
         self.logger.info("calculating generalized eigenvalue problem ( A*u = (lambda)*B*u )")
 
@@ -126,6 +127,8 @@ class MyCCA(object):
         yleft = np.dot(Cxy.T, np.linalg.solve(Cxx,Cxy))
         yright = Cyy
         y_eigvals, y_eigvecs = self.solve_eigprob(yleft, yright)
+
+        # y_eigvecs = (1 / np.sqrt(x_eigvals)) * Cyy * Cxy * x_eigvals
 
         self.x_weights = x_eigvecs
         self.eigvals = x_eigvals
@@ -240,7 +243,6 @@ class MyCCA(object):
             X = self.X_c
             Y = self.Y_c
 
-
         # PCA
         pca = PCA(n_components=2)
         X_r = pca.fit(X).transform(X)
@@ -249,25 +251,31 @@ class MyCCA(object):
         if probabilistic:
             Z_r = pca.fit(Z).transform(Z)
 
+        x_sign = np.sign(np.corrcoef(X[:,0], Y[:,0]))[0, 1]
+        y_sign = np.sign(np.corrcoef(X[:,1], Y[:,1]))[0, 1]
+        print np.corrcoef(X[:,0], Y[:,0])
+        print np.corrcoef(X[:,1], Y[:,1])
+
+
         # begin plot
         plt.figure()
 
         plt.subplot(221)
-        plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
-        plt.plot(X_r[:, 0], X_r[:, 1], '.r')
+        plt.plot(X[:, 0], X[:, 1], 'xb')
+        plt.plot(Y[:, 0] * x_sign, Y[:, 1] * y_sign, '.r')
         plt.title('CCA XY')
 
         plt.subplot(222)
-        plt.plot(X_r[:, 0], X_r[:, 1], '.r')
+        plt.plot(X[:, 0], X[:, 1], '.r')
         plt.title('CCA X')
 
         plt.subplot(223)
-        plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
+        plt.plot(Y[:, 0] * x_sign, Y[:, 1] * y_sign, '.r')
         plt.title('CCA Y')
 
         if probabilistic:
             plt.subplot(224)
-            plt.plot(Z_r[:, 0], Z_r[:, 1], 'xb')
+            plt.plot(Z[:, 0], Z[:, 1], 'xb')
             plt.title('CCA Z')
 
         plt.show()

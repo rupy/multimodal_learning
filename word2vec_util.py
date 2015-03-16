@@ -32,11 +32,12 @@ class Word2VecUtil:
         self.logger.info("saving model data")
         if save_file:
             self.model.save(save_file)
-        self.logger.info("finished word2vec learning")
+        self.logger.info("completed learning word2vec")
 
     def load_model(self, save_file):
         self.logger.info("loading model data")
         self.model = word2vec.Word2Vec.load(save_file)
+        self.logger.info("completed loading model data")
         return self.model
 
     def print_most_similar_words(self, word):
@@ -51,23 +52,20 @@ class Word2VecUtil:
         labels = np.array([word] + [x[0] for x in out])
         return matrix, labels
 
-    def create_word_vector_df(self, vocab_list=None):
-        word_dict = None
-        if vocab_list:
-            word_dict = {word: self.model[word] for word in vocab_list}
-        else:
-            word_dict = {word: self.model[word] for word in self.model.vocab.keys()}
-        self.word_vector_df = pd.DataFrame(word_dict)
-        return self.word_vector_df
+    def create_word_features(self, tag_list):
+        word_vectors = []
+        for tags in tag_list:
+            for tag in tags:
+                word_vectors.append(self.model[tag])
+        self.word_vector_mat = np.array(word_vectors)
 
-    def save_word_vector_df(self, filepath):
-        self.logger.info("saving word vector data frame as pickle")
-        self.word_vector_df.to_pickle(filepath)
+    def save_word_features(self, filepath):
+        self.logger.info("saving word vector as pickle")
+        np.save(filepath, self.word_vector_mat)
 
-    def load_word_vector_df(self, filepath):
-        self.logger.info("loading word vector dataframe")
-        self.word_vector_df = pd.read_pickle(filepath)
-
+    def load_word_features(self, filepath):
+        self.logger.info("loading word vector")
+        self.word_vector_mat = np.load(filepath)
 
     def plot_pca_data(self, X, labels):
 
