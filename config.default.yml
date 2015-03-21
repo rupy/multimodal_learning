@@ -6,6 +6,7 @@ flickr_dataset:
 word2vec_model:
     model_path: /path/to/enwiki_word2vec_200dim.dat
 features:
-    image_feature_path: /path/to/features.npy
-tmp_data:
-    tmp_dir_path:  /path/to/tmp_data/
+    image_feature_path: /path/to/img_features.npy
+    word_feature_path: /path/to/word_features.npy
+cca_data:
+    cca_dir_path:  /path/to/cca_data/

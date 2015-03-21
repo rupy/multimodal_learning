@@ -11,7 +11,10 @@ import pandas as pd
 import sys
 import logging
 from collections import defaultdict
-import json
+try:
+   import cPickle as pickle
+except:
+   import pickle
 
 class FlickrDataSet:
 
@@ -27,7 +30,7 @@ class FlickrDataSet:
         self.annotation_dir_path = annotation_dir_path
         self.dataset_dir_path = dataset_dir_path
         self.annotation_df = None
-        self.tag_dict = defaultdict(list)
+        self.tag_list = []
 
         self.features_mat = None
         self.feature_avg_df = None
@@ -107,52 +110,51 @@ class FlickrDataSet:
         print self.__get_tags_from_tag_file_by_id(img_id)
         self.plot_img_by_id(img_id)
 
-    def create_tag_dict(self, tags_raw=False, vocab_set=None):
-        self.logger.info("creating tag dictionary")
+    def create_tag_list(self, vocab_set=[], tags_raw=False):
+        self.logger.info("creating tag list")
         for i in xrange(FlickrDataSet.DATASET_SIZE):
+            # open tag file & create vocabulary list
             img_id = i + 1
             file_name = 'tags%d.txt' % img_id
             tag_path = (self.dataset_dir_path + 'meta/tags_raw/' + file_name) if tags_raw else (self.dataset_dir_path + 'meta/tags/' + file_name)
             f = open(tag_path)
             tags = set(f.read().strip().split('\r\n'))
-            tags_vocab = tags & set(vocab_set)
             f.close()
-            for tag in tags_vocab:
-                self.tag_dict[tag].append(img_id)
+            tags_vocab = tags & set(vocab_set) # check tag if tag is in vocabulary
+            self.tag_list.append(tags_vocab)
             self.logger.info("Image ID: %d / %d %d%% %s" % (img_id, FlickrDataSet.DATASET_SIZE, img_id * 100 / FlickrDataSet.DATASET_SIZE, tags_vocab))
-        return self.tag_dict
+        return self.tag_list
 
-    def save_tag_dict_as_json(self, filename):
-        self.logger.info("saving tag dictionary as json")
-        f = open(filename, 'w')
-        json.dump(self.tag_dict, f)
-        f.close()
+    def save_tag_list(self, filepath):
+        self.logger.info("saving tag list to %s", filepath)
+        np.save(filepath, self.tag_list)
 
-    def load_tag_dict_as_json(self, filename):
-        self.logger.info("loading tag dictionary")
-        f = open(filename, 'r')
-        self.tag_dict = json.load(f)
-        f.close()
-        return self.tag_dict
+    def load_tag_list(self, filepath):
+        self.logger.info("loading tag list from %s", filepath)
+        self.tag_list = np.load(filepath)
+        return self.tag_list
 
-    def load_features(self, feature_path):
+    def load_raw_features(self, feature_path):
+        self.logger.info("loading raw features from %s", feature_path)
+        features_mat = np.load(feature_path)
+        self.logger.info("feature matrix is %s", features_mat.shape)
+        # copy rows
+        self.logger.info("creating image feature matrix")
+        img_features = []
+        for tag_idx, tags in enumerate(self.tag_list):
+            self.logger.info("image id: %d", tag_idx + 1)
+            for tag in tags:
+                img_features.append(features_mat[tag_idx])
+        self.features_mat = np.array(img_features)
+        self.logger.info("created image feature matrix as %s", self.features_mat.shape)
+        return self.features_mat
+
+
+
+    def save_img_features(self, filepath):
+        self.logger.info("saving features")
+        np.save(filepath, self.features_mat)
+
+    def load_img_features(self, filepath):
         self.logger.info("loading features")
-        self.features_mat = np.load(feature_path)
-
-    def create_avg_features_df(self):
-        self.logger.info("creating avg features as dataframe")
-        tag_dict_avg = {
-            tag: np.average(self.features_mat[np.array(ids) - 1], axis=0).tolist()  # average all features for each tag
-            for tag, ids in self.tag_dict.items()
-        }
-        self.feature_avg_df = pd.DataFrame(tag_dict_avg)
-        return self.feature_avg_df
-
-    def save_avg_features_df(self, filepath):
-        self.logger.info("saving avg features as dataframe")
-        self.feature_avg_df.to_pickle(filepath)
-
-    def load_avg_features_df(self, filepath):
-        self.logger.info("loading avg features dataframe")
-        self.feature_avg_df = pd.read_pickle(filepath)
-
+        self.features_mat = np.load(filepath)

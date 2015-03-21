@@ -85,7 +85,7 @@ class MyCCA(object):
         # print invvar
         eig_vecs = np.dot(eig_vecs, invvar)
 
-        # print np.dot(eig_vecs.T, np.dot(right, eig_vecs))
+        print np.dot(eig_vecs.T, np.dot(right, eig_vecs)).round().astype(int)
 
         return eig_vals, eig_vecs
 
@@ -103,7 +103,6 @@ class MyCCA(object):
         Cyy = Cov[p:, p:]
         Cxy = Cov[:p, p:]
         # print Cxx.shape, Cxy.shape, Cyy.shape
-
 
         self.logger.info("calculating generalized eigenvalue problem ( A*u = (lambda)*B*u )")
 
@@ -127,6 +126,8 @@ class MyCCA(object):
         yright = Cyy
         y_eigvals, y_eigvecs = self.solve_eigprob(yleft, yright)
 
+        # y_eigvecs = (1 / np.sqrt(x_eigvals)) * Cyy * Cxy * x_eigvals
+
         self.x_weights = x_eigvecs
         self.eigvals = x_eigvals
         self.y_weights = y_eigvecs
@@ -138,12 +139,11 @@ class MyCCA(object):
         # print x_eigvals
 
 
-    def transform(self, x, y, normalize=False):
+    def transform(self, x, y):
 
-        if normalize:
-            self.logger.info("Normalizing")
-            x = self.normalize(x)
-            y = self.normalize(y)
+        self.logger.info("Normalizing")
+        x = self.normalize(x)
+        y = self.normalize(y)
 
         # self.X = x
         # self.Y = y
@@ -200,20 +200,16 @@ class MyCCA(object):
         self.fit(x, y)
         return self.ptransform(x, y, beta)
 
-    def save_params_as_pickle(self, filename):
-        data = (self.n_components, self.reg_param, self.x_weights , self.y_weights, self.eigvals, self.calc_time,
-                self.X, self.Y, self.Cxx, self.Cyy, self.Cxy)
+    def save_params_as_pickle(self, filepath):
+        data = [self.n_components, self.reg_param, self.x_weights , self.y_weights, self.eigvals, self.calc_time,
+                self.Cxx, self.Cyy, self.Cxy]
         self.logger.info("saving cca")
-        f = open(filename, 'wb')
-        pickle.dump(data, f)
-        f.close()
+        np.save(filepath, data)
 
-    def load_params_from_pickle(self, filename):
+    def load_params_from_pickle(self, filepath):
         self.logger.info("loading cca")
-        f = open(filename, 'rb')
         self.n_components, self.reg_param, self.x_weights , self.y_weights, self.eigvals, self.calc_time,\
-        self.X, self.Y, self.Cxx, self.Cyy, self.Cxy = pickle.load(f)
-        f.close()
+        self.X, self.Y, self.Cxx, self.Cyy, self.Cxy = np.load(filepath)
 
     def check_fit_finished(self):
         return self.x_weights is not None\
@@ -240,7 +236,6 @@ class MyCCA(object):
             X = self.X_c
             Y = self.Y_c
 
-
         # PCA
         pca = PCA(n_components=2)
         X_r = pca.fit(X).transform(X)
@@ -249,25 +244,31 @@ class MyCCA(object):
         if probabilistic:
             Z_r = pca.fit(Z).transform(Z)
 
+        x_sign = np.sign(np.corrcoef(X[:,0], Y[:,0]))[0, 1]
+        y_sign = np.sign(np.corrcoef(X[:,1], Y[:,1]))[0, 1]
+        print np.corrcoef(X[:,0], Y[:,0])
+        print np.corrcoef(X[:,1], Y[:,1])
+
+
         # begin plot
         plt.figure()
 
         plt.subplot(221)
-        plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
-        plt.plot(X_r[:, 0], X_r[:, 1], '.r')
+        plt.plot(X[:, 0], X[:, 1], 'xb')
+        plt.plot(Y[:, 0] * x_sign, Y[:, 1] * y_sign, '.r')
         plt.title('CCA XY')
 
         plt.subplot(222)
-        plt.plot(X_r[:, 0], X_r[:, 1], '.r')
+        plt.plot(X[:, 0], X[:, 1], 'xb')
         plt.title('CCA X')
 
         plt.subplot(223)
-        plt.plot(Y_r[:, 0], Y_r[:, 1], 'xb')
+        plt.plot(Y[:, 0] * x_sign, Y[:, 1] * y_sign, '.r')
         plt.title('CCA Y')
 
         if probabilistic:
             plt.subplot(224)
-            plt.plot(Z_r[:, 0], Z_r[:, 1], 'xb')
+            plt.plot(Z[:, 0], Z[:, 1], 'xb')
             plt.title('CCA Z')
 
         plt.show()

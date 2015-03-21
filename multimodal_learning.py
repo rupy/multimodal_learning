@@ -11,36 +11,29 @@ def learn_word2vec_model_from_wiki_corpus():
     joint = Joint()
     joint.learn_wiki_corpus()
 
-def create_tag_dict():
+def create_tag_list():
     joint = Joint()
-    joint.load_model()
-    joint.create_tag_dict()
+    joint.create_tag_list()
 
-def create_feature_matrix():
+def create_word_feature():
     joint = Joint()
+    joint.create_word_feature_matrix()
 
-    joint.load_model()
-    joint.load_tag_dict()
-    joint.load_flickr_features()
-
-    joint.create_feature_matrices()
-
-def fit_and_transform_by_cca():
+def create_image_feature():
     joint = Joint()
-    joint.load_feature_matrices()
+    joint.create_image_feature_matrix()
+
+def fit_by_cca():
+    joint = Joint()
     joint.fit_data_by_cca()
     joint.transform_data()
 
 def transform_cca():
     joint = Joint()
-    joint.load_feature_matrices()
-    joint.load_cca()
     joint.transform_data()
 
 def transform_pcca():
     joint = Joint()
-    joint.load_feature_matrices()
-    joint.load_cca()
     joint.transform_data(probabilistic=True)
 
 def print_corrcoef():
@@ -61,6 +54,8 @@ def plot_pcca_result():
 if __name__== "__main__":
 
     logging.root.setLevel(level=logging.INFO)
+    # fit_and_transform_by_cca()
+    # plot_pcca_result()
 
+    # transform_pcca()
     plot_pcca_result()
-
