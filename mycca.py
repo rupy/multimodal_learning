@@ -15,6 +15,7 @@ except:
    import pickle
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+import h5py
 
 class MyCCA(object):
 
@@ -84,10 +85,8 @@ class MyCCA(object):
         invvar = np.diag(np.reciprocal(np.sqrt(np.diag(var))))
         # print invvar
         eig_vecs = np.dot(eig_vecs, invvar)
-        print eig_vals
-        exit(0)
 
-        # print np.dot(eig_vecs.T, np.dot(right, eig_vecs))
+        print np.dot(eig_vecs.T, np.dot(right, eig_vecs)).round().astype(int)
 
         return eig_vals, eig_vecs
 
@@ -141,12 +140,11 @@ class MyCCA(object):
         # print x_eigvals
 
 
-    def transform(self, x, y, normalize=False):
+    def transform(self, x, y):
 
-        if normalize:
-            self.logger.info("Normalizing")
-            x = self.normalize(x)
-            y = self.normalize(y)
+        self.logger.info("Normalizing")
+        x = self.normalize(x)
+        y = self.normalize(y)
 
         # self.X = x
         # self.Y = y
@@ -203,19 +201,21 @@ class MyCCA(object):
         self.fit(x, y)
         return self.ptransform(x, y, beta)
 
-    def save_params_as_pickle(self, filename):
-        data = (self.n_components, self.reg_param, self.x_weights , self.y_weights, self.eigvals, self.calc_time,
-                self.X, self.Y, self.Cxx, self.Cyy, self.Cxy)
+    def save_params_as_pickle(self, filepath):
+        data = [self.n_components, self.reg_param, self.x_weights , self.y_weights, self.eigvals, self.calc_time,
+                self.Cxx, self.Cyy, self.Cxy]
         self.logger.info("saving cca")
-        f = open(filename, 'wb')
-        pickle.dump(data, f)
+        f = h5py.File(filepath, "w")
+        f.create_dataset("cca_params", data=data)
+        f.flush()
         f.close()
 
-    def load_params_from_pickle(self, filename):
+    def load_params_from_pickle(self, filepath):
         self.logger.info("loading cca")
-        f = open(filename, 'rb')
+        f = h5py.File(filepath, "r")
         self.n_components, self.reg_param, self.x_weights , self.y_weights, self.eigvals, self.calc_time,\
-        self.X, self.Y, self.Cxx, self.Cyy, self.Cxy = pickle.load(f)
+        self.X, self.Y, self.Cxx, self.Cyy, self.Cxy = f["cca_params"].value
+        f.flush()
         f.close()
 
     def check_fit_finished(self):
@@ -266,7 +266,7 @@ class MyCCA(object):
         plt.title('CCA XY')
 
         plt.subplot(222)
-        plt.plot(X[:, 0], X[:, 1], '.r')
+        plt.plot(X[:, 0], X[:, 1], 'xb')
         plt.title('CCA X')
 
         plt.subplot(223)

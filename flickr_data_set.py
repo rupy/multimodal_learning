@@ -11,7 +11,11 @@ import pandas as pd
 import sys
 import logging
 from collections import defaultdict
-import json
+try:
+   import cPickle as pickle
+except:
+   import pickle
+import h5py
 
 class FlickrDataSet:
 
@@ -27,7 +31,6 @@ class FlickrDataSet:
         self.annotation_dir_path = annotation_dir_path
         self.dataset_dir_path = dataset_dir_path
         self.annotation_df = None
-        self.tag_dict = defaultdict(list)
         self.tag_list = []
 
         self.features_mat = None
@@ -108,7 +111,7 @@ class FlickrDataSet:
         print self.__get_tags_from_tag_file_by_id(img_id)
         self.plot_img_by_id(img_id)
 
-    def create_tag_list(self, tags_raw=False, vocab_set=None):
+    def create_tag_list(self, vocab_set=[], tags_raw=False):
         self.logger.info("creating tag list")
         for i in xrange(FlickrDataSet.DATASET_SIZE):
             # open tag file & create vocabulary list
@@ -123,21 +126,47 @@ class FlickrDataSet:
             self.logger.info("Image ID: %d / %d %d%% %s" % (img_id, FlickrDataSet.DATASET_SIZE, img_id * 100 / FlickrDataSet.DATASET_SIZE, tags_vocab))
         return self.tag_list
 
+    def save_tag_list(self, filepath):
+        self.logger.info("saving tag list to %s", filepath)
+        f = h5py.File(filepath, "w")
+        f.create_dataset("taglist", data=self.tag_list)
+        f.flush()
+        f.close()
+
+    def load_tag_list(self, filepath):
+        self.logger.info("loading tag list from %s", filepath)
+        f = h5py.File(filepath, "r")
+        self.tag_list = f["taglist"].value
+        f.flush()
+        f.close()
+        return self.tag_list
+
     def load_raw_features(self, feature_path):
-        self.logger.info("loading raw features")
+        self.logger.info("loading raw features from %s", feature_path)
         features_mat = np.load(feature_path)
+        self.logger.info("feature matrix is %s", features_mat.shape)
         # copy rows
-        self.logger.info("creating feature matrix")
-        img_features = np.array([]).reshape(0, features_mat.shape[1])
+        self.logger.info("creating image feature matrix")
+        img_features = []
         for tag_idx, tags in enumerate(self.tag_list):
-            img_features = np.vstack([img_features, features_mat[tag_idx -1]])
-        self.features_mat = img_features
+            self.logger.info("image id: %d", tag_idx + 1)
+            for tag in tags:
+                img_features.append(features_mat[tag_idx])
+        self.features_mat = np.array(img_features)
+        self.logger.info("created image feature matrix as %s", self.features_mat.shape)
+        return self.features_mat
 
 
     def save_img_features(self, filepath):
         self.logger.info("saving features")
-        np.save(filepath, self.features_mat)
+        f = h5py.File(filepath, "w")
+        f.create_dataset("img_features_mat", data=self.features_mat)
+        f.flush()
+        f.close()
 
     def load_img_features(self, filepath):
         self.logger.info("loading features")
-        self.features_mat = np.load(filepath)
+        f = h5py.File(filepath, "r")
+        self.features_mat = f["img_features_mat"].value
+        f.flush()
+        f.close()

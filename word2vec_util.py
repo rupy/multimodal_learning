@@ -12,6 +12,7 @@ import sys
 import os.path
 import multiprocessing
 import pandas as pd
+import h5py
 
 class Word2VecUtil:
 
@@ -35,9 +36,9 @@ class Word2VecUtil:
         self.logger.info("completed learning word2vec")
 
     def load_model(self, save_file):
-        self.logger.info("loading model data")
+        self.logger.info("loading word2vec model data")
         self.model = word2vec.Word2Vec.load(save_file)
-        self.logger.info("completed loading model data")
+        self.logger.info("completed loading word2vec model data")
         return self.model
 
     def print_most_similar_words(self, word):
@@ -53,19 +54,29 @@ class Word2VecUtil:
         return matrix, labels
 
     def create_word_features(self, tag_list):
+        self.logger.info("creating word features")
         word_vectors = []
-        for tags in tag_list:
+        for i, tags in enumerate(tag_list):
+            self.logger.info("image id: %d", i + 1)
             for tag in tags:
                 word_vectors.append(self.model[tag])
         self.word_vector_mat = np.array(word_vectors)
 
     def save_word_features(self, filepath):
         self.logger.info("saving word vector as pickle")
-        np.save(filepath, self.word_vector_mat)
+
+        f = h5py.File(filepath, "w")
+        f.create_dataset("word_vector_mat", data=self.word_vector_mat)
+        f.flush()
+        f.close()
+
 
     def load_word_features(self, filepath):
         self.logger.info("loading word vector")
-        self.word_vector_mat = np.load(filepath)
+        f = h5py.File(filepath, "r")
+        self.features_mat = f["word_vector_mat"].value
+        f.flush()
+        f.close()
 
     def plot_pca_data(self, X, labels):
 
