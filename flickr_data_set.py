@@ -31,6 +31,8 @@ class FlickrDataSet:
         self.dataset_dir_path = dataset_dir_path
         self.annotation_df = None
         self.tag_list = []
+        self.tag_label = []
+        self.img_label = []
 
         self.features_mat = None
         self.feature_avg_df = None
@@ -110,6 +112,13 @@ class FlickrDataSet:
         print self.__get_tags_from_tag_file_by_id(img_id)
         self.plot_img_by_id(img_id)
 
+    def plot_images_by_tag(self, tag):
+        indices = []
+        for idx, tags in enumerate(self.tag_list):
+            if tag in tags:
+                indices.append(idx)
+                self.plot_image_with_tags_by_id(idx + 1)
+
     def create_tag_list(self, vocab_set=[], tags_raw=False):
         self.logger.info("creating tag list")
         for i in xrange(FlickrDataSet.DATASET_SIZE):
@@ -124,6 +133,35 @@ class FlickrDataSet:
             self.tag_list.append(tags_vocab)
             self.logger.info("Image ID: %d / %d %d%% %s" % (img_id, FlickrDataSet.DATASET_SIZE, img_id * 100 / FlickrDataSet.DATASET_SIZE, tags_vocab))
         return self.tag_list
+
+    def create_tag_label(self):
+        self.logger.info("creating tag label")
+        for tags in self.tag_list:
+            for tag in tags:
+                self.tag_label.append(tag)
+
+    def save_tag_label(self, filepath):
+        self.logger.info("saving tag label to %s", filepath)
+        np.save(filepath, self.tag_label)
+
+    def load_tag_label(self, filepath):
+        self.logger.info("loading tag label to %s", filepath)
+        self.tag_label = np.load(filepath)
+        return self.tag_label
+
+    def create_img_label(self):
+        self.logger.info("creating img label")
+        for i, tags in enumerate(self.tag_list):
+            for tag in tags:
+                self.img_label.append(i)
+    def save_img_label(self, filepath):
+        self.logger.info("saving img label to %s", filepath)
+        np.save(filepath, self.img_label)
+
+    def load_img_label(self, filepath):
+        self.logger.info("loading img label to %s", filepath)
+        self.img_label = np.load(filepath)
+        return self.img_label
 
     def save_tag_list(self, filepath):
         self.logger.info("saving tag list to %s", filepath)
@@ -156,3 +194,4 @@ class FlickrDataSet:
     def load_img_features(self, filepath):
         self.logger.info("loading features")
         self.features_mat = np.load(filepath)
+

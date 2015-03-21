@@ -11,7 +11,11 @@ import sys
 import yaml
 from mycca import MyCCA
 import numpy as np
-import h5py
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+
+def distance(p1, p2):
+    return np.linalg.norm(p1 - p2)
 
 class Joint:
 
@@ -19,6 +23,8 @@ class Joint:
     FEATURE_SAVE_FILE ='features/image_feature.npy'
     WORDVECTOR__SAVE_FILE ='features/word_vector.npy'
     TAG_LIST_SAVE_FILE = 'tmp/tag_list.npy'
+    IMG_LABEL_SAVE_FILE = 'tmp/img_label.npy'
+    TAG_LABEL_SAVE_FILE = 'tmp/tag_label.npy'
     CCA_PARAMS_SAVE_DIR = 'cca_params/'
 
     def __init__(self):
@@ -71,6 +77,21 @@ class Joint:
         self.flickr.create_tag_list(self.word2vec.model.vocab.keys())
         self.flickr.save_tag_list(self.output_dir_path + Joint.TAG_LIST_SAVE_FILE)
 
+    def create_labels(self):
+        """
+        Create tag & image labels for features. labels are saved at the end of calculation.
+        :return: None
+        """
+        self.flickr.load_tag_list(self.output_dir_path + Joint.TAG_LIST_SAVE_FILE)
+
+        # create labels from tag list
+        self.flickr.create_img_label()
+        self.flickr.create_tag_label()
+
+        # save
+        self.flickr.save_tag_label(self.output_dir_path + Joint.TAG_LABEL_SAVE_FILE)
+        self.flickr.save_img_label(self.output_dir_path + Joint.IMG_LABEL_SAVE_FILE)
+
     def create_image_feature_matrix(self):
         """
         Create image and word feature matrices. Features are saved at the end of calculation.
@@ -82,6 +103,7 @@ class Joint:
         # calculation
         self.flickr.load_raw_features(self.original_feature_path)
         self.flickr.save_img_features(self.output_dir_path + Joint.FEATURE_SAVE_FILE)
+
 
     def create_word_feature_matrix(self):
         """
@@ -185,6 +207,101 @@ class Joint:
         """
 
         print self.cca.corrcoef()
+
+    def load_labels(self):
+        self.flickr.load_tag_label(self.output_dir_path + Joint.TAG_LABEL_SAVE_FILE)
+        self.flickr.load_img_label(self.output_dir_path + Joint.IMG_LABEL_SAVE_FILE)
+
+    def tag_nearest_neighbor(self, search_tag):
+
+        X_c = self.cca.X_c
+        Y_c = self.cca.Y_c
+        print X_c.shape
+        print Y_c.shape
+        # correct direction
+        cor_signs = np.sign([np.corrcoef(X_c[:, i], Y_c[:, i])[0, 1] for i in xrange(X_c.shape[1])])
+        print cor_signs
+        Y_s = Y_c * cor_signs
+
+        # tag-img pair is not only one pair
+        indices = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag == search_tag ]
+
+        min_dist = None
+        min_tag_idx = None
+        min_img_idx = None
+        for tag_idx in indices:
+            print "[" + str(tag_idx) + "]"
+            for img_idx, img_feat in enumerate(Y_s):
+                tag_feat = X_c[tag_idx]
+                d = distance(tag_feat, img_feat)
+                if min_dist is None or d < min_dist:
+                    print "-" + str(img_idx) + ": " + str(d)
+                    min_dist = d
+                    min_tag_idx = tag_idx
+                    min_img_idx = img_idx
+                    # self.flickr.plot_img_by_id(self.flickr.img_label[min_img_idx] + 1)
+
+        tag_name = self.flickr.tag_label[min_tag_idx]
+        dataset_idx = self.flickr.img_label[min_img_idx] + 1
+        print "tag"
+        print tag_name
+        print "img"
+        print dataset_idx
+
+        self.flickr.plot_img_by_id(dataset_idx)
+        print X_c[min_tag_idx]
+        print Y_s[min_img_idx]
+        # self.plot_points(np.array([X_c[min_tag_idx, 0:2],Y_s[min_img_idx, 0:2]]),
+        #                  X_c[:, 0].min(), X_c[:, 0].max(), Y_c[:, 1].min(), Y_c[:, 1].max())
+
+        # dat = np.array([X_c[min_tag_idx, 0:2],Y_s[min_img_idx, 0:2]])
+        # self.plot_points_2(X_c, Y_s, dat,
+        #                  dat[:, 0].min(), dat[:, 0].max(), dat[:, 1].min(), dat[:, 1].max())
+
+        
+        dat = np.array([X_c[min_tag_idx],Y_s[min_img_idx]])
+        self.plot_points_3(X_c, Y_s, min_tag_idx, min_img_idx)
+
+    def plot_img_by_tag(self, tag):
+        self.flickr.load_tag_list(self.output_dir_path + Joint.TAG_LIST_SAVE_FILE)
+        self.flickr.plot_images_by_tag(tag)
+
+    def plot_points(self, data, xmin=None, xmax=None, ymin=None, ymax=None):
+        print data.shape
+        plt.plot(data[:, 0], data[:, 1], 'xb')
+        if xmin and xmax:
+            plt.xlim(xmin, xmax)
+        if ymin and ymax:
+            plt.ylim(ymin, ymax)
+        plt.show()
+
+    def plot_points_2(self, X, Y, data,  xmin=None, xmax=None, ymin=None, ymax=None):
+        plt.plot(X[:, 0], X[:, 1], 'xb')
+        plt.plot(Y[:, 0], Y[:, 1], '.r')
+        plt.plot(data[:, 0], data[:, 1], 'og')
+        if xmin and xmax:
+            plt.xlim(xmin - (xmax - xmin) * 50, xmax + (xmax - xmin) * 50)
+        if ymin and ymax:
+            plt.ylim(ymin - (ymax - ymin) * 50, ymax + (ymax - ymin) * 50)
+        plt.show()
+
+    def plot_points_3(self, X, Y, min_tag_idx, min_img_idx):
+
+        ALL = np.vstack([X, Y])
+        pca = PCA(n_components=2)
+        ALL_r = pca.fit(ALL).transform(ALL)
+        size = X.shape[0]
+        X_r = ALL_r[0:size]
+        Y_r = ALL_r[size+1:size*2]
+
+        plt.plot(X_r[:, 0], X_r[:, 1], 'xb')
+        plt.plot(Y_r[:, 0], Y_r[:, 1], '.r')
+        data = np.array([X_r[min_tag_idx], Y_r[min_img_idx]])
+        print distance(data[0], data[1])
+        plt.plot(data[:, 0], data[:, 1], 'og')
+
+        plt.show()
+
 
 if __name__=="__main__":
 

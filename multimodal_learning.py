@@ -50,6 +50,20 @@ def plot_pcca_result():
     joint.load_transformed_data(probabilistic=True)
     joint.plot_transformed_data(probabilistic=True)
 
+def create_labels():
+    joint = Joint()
+    joint.create_labels()
+
+def nn_by_tag(search_tag):
+    joint = Joint()
+    joint.load_transformed_data()
+    joint.load_labels()
+    joint.tag_nearest_neighbor(search_tag)
+
+def plot_images_by_tag(search_tag):
+    joint = Joint()
+    joint.plot_img_by_tag(search_tag)
+
 if __name__== "__main__":
 
     logging.root.setLevel(level=logging.INFO)
@@ -58,4 +72,8 @@ if __name__== "__main__":
 
     # transform_pcca()
     # transform_cca()
-    plot_cca_result()
+    # create_labels()
+
+    nn_by_tag("drink")
+    # plot_images_by_tag("cow")
+    # plot_cca_result()

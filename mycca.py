@@ -251,25 +251,16 @@ class MyCCA(object):
             X = self.X_c
             Y = self.Y_c
 
-        # PCA
-        pca = PCA(n_components=2)
-        X_r = pca.fit(X).transform(X)
-        Y_r = pca.fit(Y).transform(Y)
-        Z_r = None
-        if probabilistic:
-            Z_r = pca.fit(Z).transform(Z)
-
-        x_sign = np.sign(np.corrcoef(X[:,0], Y[:,0]))[0, 1]
-        y_sign = np.sign(np.corrcoef(X[:,1], Y[:,1]))[0, 1]
-        print np.corrcoef(X[:,0], Y[:,0])
-        print np.corrcoef(X[:,1], Y[:,1])
+        # correct direction
+        cor_signs = np.sign([np.corrcoef(X[:, i], Y[:, i])[0, 1] for i in xrange(X.shape[1])])
+        Y_s = Y * cor_signs
 
         # begin plot
         plt.figure()
 
         plt.subplot(221)
         plt.plot(X[:, 0], X[:, 1], 'xb')
-        plt.plot(Y[:, 0] * x_sign, Y[:, 1] * y_sign, '.r')
+        plt.plot(Y_s[:, 0], Y_s[:, 1], '.r')
         plt.title('CCA XY')
 
         plt.subplot(222)
@@ -277,7 +268,7 @@ class MyCCA(object):
         plt.title('CCA X')
 
         plt.subplot(223)
-        plt.plot(Y[:, 0] * x_sign, Y[:, 1] * y_sign, '.r')
+        plt.plot(Y_s[:, 0], Y_s[:, 1], '.r')
         plt.title('CCA Y')
 
         if probabilistic:
