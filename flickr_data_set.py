@@ -149,8 +149,6 @@ class FlickrDataSet:
         self.logger.info("created image feature matrix as %s", self.features_mat.shape)
         return self.features_mat
 
-
-
     def save_img_features(self, filepath):
         self.logger.info("saving features")
         np.save(filepath, self.features_mat)

@@ -19,7 +19,7 @@ class Joint:
     FEATURE_SAVE_FILE ='features/image_feature.npy'
     WORDVECTOR__SAVE_FILE ='features/word_vector.npy'
     TAG_LIST_SAVE_FILE = 'tmp/tag_list.npy'
-    CCA_SAVE_FILE = 'cca/cca.pkl'
+    CCA_PARAMS_SAVE_DIR = 'cca_params/'
 
     def __init__(self):
 
@@ -110,7 +110,7 @@ class Joint:
         self.cca.fit(self.word2vec.word_vector_mat, self.flickr.features_mat)
 
         # save
-        self.cca.save_params_as_pickle(self.output_dir_path + Joint.CCA_SAVE_FILE)
+        self.cca.save_params_as_pickle(self.output_dir_path + Joint.CCA_PARAMS_SAVE_DIR)
 
     def transform_data(self, probabilistic=False):
         """
@@ -124,7 +124,7 @@ class Joint:
         self.logger.info("features_mat shape is %s", self.flickr.features_mat.shape)
         self.word2vec.load_word_features(self.output_dir_path + Joint.WORDVECTOR__SAVE_FILE)
         self.logger.info("word_vector_mat shape is %s", self.word2vec.word_vector_mat.shape)
-        self.cca.load_params_from_pickle(self.output_dir_path + Joint.CCA_SAVE_FILE)
+        self.cca.load_params_from_pickle(self.output_dir_path + Joint.CCA_PARAMS_SAVE_DIR)
 
         # transform and save
         for n in xrange(10, 210, 10):
@@ -133,15 +133,15 @@ class Joint:
                 self.cca.n_components = n
 
                 x_c, y_c, z = self.cca.ptransform(self.word2vec.word_vector_mat, self.flickr.features_mat)
-                np.save(self.output_dir_path + 'pcca_' + str(n) + 'x.npy', x_c)
-                np.save(self.output_dir_path + 'pcca_' + str(n) + 'y.npy', y_c)
-                np.save(self.output_dir_path + 'pcca_' + str(n) + 'z.npy', z)
+                np.save(self.output_dir_path + 'cca/pcca_' + str(n) + 'x.npy', x_c)
+                np.save(self.output_dir_path + 'cca/pcca_' + str(n) + 'y.npy', y_c)
+                np.save(self.output_dir_path + 'cca/pcca_' + str(n) + 'z.npy', z)
             else:
                 self.logger.info("cca transform: n_components is %d", n)
                 self.cca.n_components = n
                 x_c, y_c = self.cca.transform(self.word2vec.word_vector_mat, self.flickr.features_mat)
-                np.save(self.output_dir_path + 'cca_' + str(n) + 'x.npy', x_c)
-                np.save(self.output_dir_path + 'cca_' + str(n) + 'y.npy', y_c)
+                np.save(self.output_dir_path + 'cca/cca_' + str(n) + 'x.npy', x_c)
+                np.save(self.output_dir_path + 'cca/cca_' + str(n) + 'y.npy', y_c)
 
     def load_transformed_data(self, probabilistic=False, n_components=200):
         """
@@ -155,15 +155,15 @@ class Joint:
         y_c = None
         z = None
         if probabilistic:
-            x_c = np.load(self.output_dir_path + 'pcca_' + str(n_components) + 'x.npy')
-            y_c = np.load(self.output_dir_path + 'pcca_' + str(n_components) + 'y.npy')
-            z = np.load(self.output_dir_path + 'pcca_' + str(n_components) + 'z.npy')
+            x_c = np.load(self.output_dir_path + 'cca/pcca_' + str(n_components) + 'x.npy')
+            y_c = np.load(self.output_dir_path + 'cca/pcca_' + str(n_components) + 'y.npy')
+            z = np.load(self.output_dir_path + 'cca/pcca_' + str(n_components) + 'z.npy')
             self.cca.X_pc = x_c
             self.cca.Y_pc = y_c
             self.cca.Z_pc = z
         else:
-            x_c = np.load(self.output_dir_path + 'cca_' + str(n_components) + 'x.npy')
-            y_c = np.load(self.output_dir_path + 'cca_' + str(n_components) + 'y.npy')
+            x_c = np.load(self.output_dir_path + 'cca/cca_' + str(n_components) + 'x.npy')
+            y_c = np.load(self.output_dir_path + 'cca/cca_' + str(n_components) + 'y.npy')
             self.cca.X_c = x_c
             self.cca.Y_c = y_c
 

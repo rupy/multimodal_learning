@@ -26,7 +26,6 @@ def create_image_feature():
 def fit_by_cca():
     joint = Joint()
     joint.fit_data_by_cca()
-    joint.transform_data()
 
 def transform_cca():
     joint = Joint()
@@ -58,4 +57,5 @@ if __name__== "__main__":
     # plot_pcca_result()
 
     # transform_pcca()
-    plot_pcca_result()
+    # transform_cca()
+    plot_cca_result()

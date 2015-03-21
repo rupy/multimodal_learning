@@ -204,12 +204,27 @@ class MyCCA(object):
         data = [self.n_components, self.reg_param, self.x_weights , self.y_weights, self.eigvals, self.calc_time,
                 self.Cxx, self.Cyy, self.Cxy]
         self.logger.info("saving cca")
-        np.save(filepath, data)
+        np.save(filepath + "n_components.npy" , self.n_components)
+        np.save(filepath + "reg_param.npy", self.reg_param)
+        np.save(filepath + "x_weights.npy", self.x_weights)
+        np.save(filepath + "y_weights.npy", self.y_weights)
+        np.save(filepath + "eigvals.npy", self.eigvals)
+        np.save(filepath + "calc_time.npy", self.calc_time)
+        np.save(filepath + "cxx.npy", self.Cxx)
+        np.save(filepath + "cyy.npy", self.Cyy)
+        np.save(filepath + "cxy.npy", self.Cxy)
 
     def load_params_from_pickle(self, filepath):
         self.logger.info("loading cca")
-        self.n_components, self.reg_param, self.x_weights , self.y_weights, self.eigvals, self.calc_time,\
-        self.X, self.Y, self.Cxx, self.Cyy, self.Cxy = np.load(filepath)
+        self.n_components = np.load(filepath + "n_components.npy")
+        self.reg_param = np.load(filepath + "reg_param.npy")
+        self.x_weights = np.load(filepath + "x_weights.npy")
+        self.y_weights = np.load(filepath + "y_weights.npy")
+        self.eigvals = np.load(filepath + "eigvals.npy")
+        self.calc_time = np.load(filepath + "calc_time.npy")
+        self.Cxx = np.load(filepath + "cxx.npy")
+        self.Cyy = np.load(filepath + "cyy.npy")
+        self.Cxy = np.load(filepath + "cxy.npy")
 
     def check_fit_finished(self):
         return self.x_weights is not None\
@@ -249,7 +264,6 @@ class MyCCA(object):
         print np.corrcoef(X[:,0], Y[:,0])
         print np.corrcoef(X[:,1], Y[:,1])
 
-
         # begin plot
         plt.figure()
 
@@ -278,11 +292,6 @@ class MyCCA(object):
     def normalize(self, mat):
         m = np.mean(mat, axis=0)
         mat = mat - m
-        # for arr in mat:
-        #     m = np.mean(arr)
-        #     # s = np.std(arr)
-        #     # if s != 0.0:
-        #     arr = np.array([(arr[i] - m) for i in range(len(arr))])
         return mat
 
     def corrcoef(self):
