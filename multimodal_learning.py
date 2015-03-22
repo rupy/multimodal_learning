@@ -74,6 +74,6 @@ if __name__== "__main__":
     # transform_cca()
     # create_labels()
 
-    nn_by_tag("drink")
+    nn_by_tag("horse")
     # plot_images_by_tag("cow")
     # plot_cca_result()

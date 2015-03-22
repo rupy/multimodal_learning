@@ -13,9 +13,9 @@ from mycca import MyCCA
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+from scipy.spatial import distance
+import ml_util
 
-def distance(p1, p2):
-    return np.linalg.norm(p1 - p2)
 
 class Joint:
 
@@ -214,12 +214,14 @@ class Joint:
 
     def tag_nearest_neighbor(self, search_tag):
 
-        X_c = self.cca.X_c
-        Y_c = self.cca.Y_c
+        X_c = self.cca.X_c[:, 0:10]
+        Y_c = self.cca.Y_c[:, 0:10]
         print X_c.shape
         print Y_c.shape
         # correct direction
-        cor_signs = np.sign([np.corrcoef(X_c[:, i], Y_c[:, i])[0, 1] for i in xrange(X_c.shape[1])])
+        contribution = [np.corrcoef(X_c[:, i], Y_c[:, i])[0, 1] for i in xrange(X_c.shape[1])]
+        print contribution
+        cor_signs = np.sign(contribution)
         print cor_signs
         Y_s = Y_c * cor_signs
 
@@ -230,16 +232,16 @@ class Joint:
         min_tag_idx = None
         min_img_idx = None
         for tag_idx in indices:
+            tag_feat = X_c[tag_idx]
             print "[" + str(tag_idx) + "]"
             for img_idx, img_feat in enumerate(Y_s):
-                tag_feat = X_c[tag_idx]
-                d = distance(tag_feat, img_feat)
+                d = distance.euclidean(tag_feat, img_feat)
                 if min_dist is None or d < min_dist:
                     print "-" + str(img_idx) + ": " + str(d)
                     min_dist = d
                     min_tag_idx = tag_idx
                     min_img_idx = img_idx
-                    # self.flickr.plot_img_by_id(self.flickr.img_label[min_img_idx] + 1)
+                    self.flickr.plot_image_with_tags_by_id(self.flickr.img_label[min_img_idx] + 1)
 
         tag_name = self.flickr.tag_label[min_tag_idx]
         dataset_idx = self.flickr.img_label[min_img_idx] + 1
@@ -248,7 +250,7 @@ class Joint:
         print "img"
         print dataset_idx
 
-        self.flickr.plot_img_by_id(dataset_idx)
+        self.flickr.plot_image_with_tags_by_id(dataset_idx)
         print X_c[min_tag_idx]
         print Y_s[min_img_idx]
         # self.plot_points(np.array([X_c[min_tag_idx, 0:2],Y_s[min_img_idx, 0:2]]),
@@ -258,7 +260,7 @@ class Joint:
         # self.plot_points_2(X_c, Y_s, dat,
         #                  dat[:, 0].min(), dat[:, 0].max(), dat[:, 1].min(), dat[:, 1].max())
 
-        
+
         dat = np.array([X_c[min_tag_idx],Y_s[min_img_idx]])
         self.plot_points_3(X_c, Y_s, min_tag_idx, min_img_idx)
 
@@ -287,17 +289,30 @@ class Joint:
 
     def plot_points_3(self, X, Y, min_tag_idx, min_img_idx):
 
-        ALL = np.vstack([X, Y])
-        pca = PCA(n_components=2)
-        ALL_r = pca.fit(ALL).transform(ALL)
-        size = X.shape[0]
-        X_r = ALL_r[0:size]
-        Y_r = ALL_r[size+1:size*2]
+        X_r, Y_r = ml_util.pca_2d(X, Y)
+        # ALL = np.vstack([X, Y])
+        # pca = PCA(n_components=2)
+        # ALL_r = pca.fit(ALL).transform(ALL)
+        # size = X.shape[0]
+        # X_r = ALL_r[0:size]
+        # Y_r = ALL_r[size:size*2]
+
+        min_d, _, min_idx_y = ml_util.nearest_neighbor(np.array([X_r[min_tag_idx]]), Y_r)
+        # min_d = None
+        # min_idx_y = None
+        # for i, y_row in enumerate(Y_r):
+        #     d = distance.euclidean(X_r[min_tag_idx], y_row)
+        #     if min_d is None or d < min_d:
+        #         min_d = d
+        #         min_idx_y = i
+        #         print d
+        dataset_idx = self.flickr.img_label[min_idx_y] + 1
+        self.flickr.plot_image_with_tags_by_id(dataset_idx)
 
         plt.plot(X_r[:, 0], X_r[:, 1], 'xb')
         plt.plot(Y_r[:, 0], Y_r[:, 1], '.r')
         data = np.array([X_r[min_tag_idx], Y_r[min_img_idx]])
-        print distance(data[0], data[1])
+        print distance.euclidean(data[0], data[1])
         plt.plot(data[:, 0], data[:, 1], 'og')
 
         plt.show()
