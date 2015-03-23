@@ -213,8 +213,8 @@ class Joint:
         self.flickr.load_tag_label(self.output_dir_path + Joint.TAG_LABEL_SAVE_FILE)
         self.flickr.load_img_label(self.output_dir_path + Joint.IMG_LABEL_SAVE_FILE)
 
-    def plot_tag_data(self, search_tag):
-        X_c = self.cca.X_c
+    def plot_tag_data(self, search_tag, n_components=10):
+        X_c = self.cca.X_c[:, 0:n_components]
         print X_c.shape
 
         # tag-img pair is not only one pair
@@ -263,6 +263,39 @@ class Joint:
         # plot nearest images
         for dataset_idx in nn_dataset_indices:
             self.flickr.plot_image_with_tags_by_id(dataset_idx)
+
+    def plot_img_data(self, search_dataset_id, n_components=10):
+        Y_c = self.cca.Y_c[:, 0:n_components]
+        print Y_c.shape
+
+        # tag-img pair is not only one pair
+        indices = [idx for idx, dataset_idx in enumerate(self.flickr.img_label) if dataset_idx == search_dataset_id - 1 ]
+        indices_not = [idx for idx, dataset_idx in enumerate(self.flickr.tag_label) if dataset_idx != search_dataset_id - 1]
+
+        ml.plot_data_3d(Y_c[indices_not], ml.add_jitter(Y_c[indices]),Y_c[indices[0]] )
+
+    def img_nearest_neighbor(self, search_dataset_id, n_components=10):
+
+        X_c = self.cca.X_c[:, 0:n_components]
+        Y_c = self.cca.Y_c[:, 0:n_components]
+        print X_c.shape
+        print Y_c.shape
+        # correct direction
+        contribution = [np.corrcoef(X_c[:, i], Y_c[:, i])[0, 1] for i in xrange(X_c.shape[1])]
+        cor_signs = np.sign(contribution)
+        Y_s = Y_c * cor_signs
+
+        # get feature index from dataset index
+        feature_idx = self.flickr.img_label.tolist().index(search_dataset_id - 1 )
+
+        # calc nearest neighbors
+        nn = NearestNeighbors(n_neighbors=200, algorithm='ball_tree').fit(X_c)
+        nn_indices = nn.kneighbors([Y_s[feature_idx]], 200, return_distance=False)
+
+        # transform image feature indices to dataset indices
+        nn_tags = list(set([self.flickr.tag_label[idx] for idx in nn_indices[0]]))
+        print nn_tags
+        self.flickr.plot_img_by_id(search_dataset_id)
 
     def plot_img_by_tag(self, tag):
         self.flickr.load_tag_list(self.output_dir_path + Joint.TAG_LIST_SAVE_FILE)

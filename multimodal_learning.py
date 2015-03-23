@@ -72,6 +72,18 @@ def nn_by_tag(search_tag):
     joint.load_labels()
     joint.tag_nearest_neighbor(search_tag, 30)
 
+def plot_img_data(dataset_idx):
+    joint = Joint()
+    joint.load_transformed_data()
+    joint.load_labels()
+    joint.plot_img_data(dataset_idx)
+
+def nn_by_img(dataset_id):
+    joint = Joint()
+    joint.load_transformed_data()
+    joint.load_labels()
+    joint.img_nearest_neighbor(dataset_id, 30)
+
 def plot_images_by_tag(search_tag):
     joint = Joint()
     joint.plot_img_by_tag(search_tag)
@@ -86,9 +98,13 @@ if __name__== "__main__":
     # transform_cca()
     # create_labels()
 
-    word = "ship"
+    # word = "ship"
     # plot_tag_img_pairs("horse")
-    plot_tag_data(word)
-    nn_by_tag(word)
+    # plot_tag_data(word)
+    # nn_by_tag(word)
     # plot_images_by_tag("cow")
     # plot_cca_result()
+
+    # id = 22
+    # plot_img_data(id)
+    # nn_by_img(id)
