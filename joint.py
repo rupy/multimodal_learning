@@ -14,8 +14,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from scipy.spatial import distance
-import ml_util
-
+import ml_util as ml
+from scipy import stats
+from sklearn.neighbors import NearestNeighbors
 
 class Joint:
 
@@ -212,10 +213,32 @@ class Joint:
         self.flickr.load_tag_label(self.output_dir_path + Joint.TAG_LABEL_SAVE_FILE)
         self.flickr.load_img_label(self.output_dir_path + Joint.IMG_LABEL_SAVE_FILE)
 
-    def tag_nearest_neighbor(self, search_tag):
+    def plot_tag_data(self, search_tag):
+        X_c = self.cca.X_c
+        print X_c.shape
 
-        X_c = self.cca.X_c[:, 0:10]
-        Y_c = self.cca.Y_c[:, 0:10]
+        # tag-img pair is not only one pair
+        indices = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag == search_tag ]
+        indices_not = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag != search_tag]
+
+        ml.plot_data_3d(X_c[indices_not], ml.add_jitter(X_c[indices]), stats.trim_mean(X_c[indices], 0.1) )
+
+    def plot_tag_img_pairs(self, search_tag, n_components=10):
+        X_c = self.cca.X_c[:, 0:n_components]
+        Y_c = self.cca.Y_c[:, 0:n_components]
+        contribution = [np.corrcoef(X_c[:, i], Y_c[:, i])[0, 1] for i in xrange(X_c.shape[1])]
+        cor_signs = np.sign(contribution)
+        Y_s = Y_c * cor_signs
+
+        # tag-img pair is not only one pair
+        indices = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag == search_tag ]
+
+        ml.plot_data_2d(ml.add_jitter(X_c[indices]), ml.add_jitter(Y_s[indices]))
+
+    def tag_nearest_neighbor(self, search_tag, n_components=10):
+
+        X_c = self.cca.X_c[:, 0:n_components]
+        Y_c = self.cca.Y_c[:, 0:n_components]
         print X_c.shape
         print Y_c.shape
         # correct direction
@@ -227,42 +250,19 @@ class Joint:
 
         # tag-img pair is not only one pair
         indices = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag == search_tag ]
+        # calc mean because tag is not unique
+        tag_data_mean = stats.trim_mean(X_c[indices], 0.1)
 
-        min_dist = None
-        min_tag_idx = None
-        min_img_idx = None
-        for tag_idx in indices:
-            tag_feat = X_c[tag_idx]
-            print "[" + str(tag_idx) + "]"
-            for img_idx, img_feat in enumerate(Y_s):
-                d = distance.euclidean(tag_feat, img_feat)
-                if min_dist is None or d < min_dist:
-                    print "-" + str(img_idx) + ": " + str(d)
-                    min_dist = d
-                    min_tag_idx = tag_idx
-                    min_img_idx = img_idx
-                    self.flickr.plot_image_with_tags_by_id(self.flickr.img_label[min_img_idx] + 1)
+        # calc nearest neighbors
+        nn = NearestNeighbors(n_neighbors=2, algorithm='ball_tree').fit(Y_s)
+        nn_indices = nn.kneighbors([tag_data_mean], 200, return_distance=False)
 
-        tag_name = self.flickr.tag_label[min_tag_idx]
-        dataset_idx = self.flickr.img_label[min_img_idx] + 1
-        print "tag"
-        print tag_name
-        print "img"
-        print dataset_idx
+        # transform image feature indices to dataset indices
+        nn_dataset_indices = list(set([self.flickr.img_label[idx] + 1 for idx in nn_indices[0]]))
 
-        self.flickr.plot_image_with_tags_by_id(dataset_idx)
-        print X_c[min_tag_idx]
-        print Y_s[min_img_idx]
-        # self.plot_points(np.array([X_c[min_tag_idx, 0:2],Y_s[min_img_idx, 0:2]]),
-        #                  X_c[:, 0].min(), X_c[:, 0].max(), Y_c[:, 1].min(), Y_c[:, 1].max())
-
-        # dat = np.array([X_c[min_tag_idx, 0:2],Y_s[min_img_idx, 0:2]])
-        # self.plot_points_2(X_c, Y_s, dat,
-        #                  dat[:, 0].min(), dat[:, 0].max(), dat[:, 1].min(), dat[:, 1].max())
-
-
-        dat = np.array([X_c[min_tag_idx],Y_s[min_img_idx]])
-        self.plot_points_3(X_c, Y_s, min_tag_idx, min_img_idx)
+        # plot nearest images
+        for dataset_idx in nn_dataset_indices:
+            self.flickr.plot_image_with_tags_by_id(dataset_idx)
 
     def plot_img_by_tag(self, tag):
         self.flickr.load_tag_list(self.output_dir_path + Joint.TAG_LIST_SAVE_FILE)
@@ -289,23 +289,10 @@ class Joint:
 
     def plot_points_3(self, X, Y, min_tag_idx, min_img_idx):
 
-        X_r, Y_r = ml_util.pca_2d(X, Y)
-        # ALL = np.vstack([X, Y])
-        # pca = PCA(n_components=2)
-        # ALL_r = pca.fit(ALL).transform(ALL)
-        # size = X.shape[0]
-        # X_r = ALL_r[0:size]
-        # Y_r = ALL_r[size:size*2]
+        X_r, Y_r = ml.pca_2d(X, Y)
 
-        min_d, _, min_idx_y = ml_util.nearest_neighbor(np.array([X_r[min_tag_idx]]), Y_r)
-        # min_d = None
-        # min_idx_y = None
-        # for i, y_row in enumerate(Y_r):
-        #     d = distance.euclidean(X_r[min_tag_idx], y_row)
-        #     if min_d is None or d < min_d:
-        #         min_d = d
-        #         min_idx_y = i
-        #         print d
+        min_d, min_idx_y = ml.nearest_neighbor(X_r[min_tag_idx], Y_r)
+
         dataset_idx = self.flickr.img_label[min_idx_y] + 1
         self.flickr.plot_image_with_tags_by_id(dataset_idx)
 

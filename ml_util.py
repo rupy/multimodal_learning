@@ -4,6 +4,7 @@
 import numpy as np
 from sklearn.decomposition import PCA
 from scipy.spatial import distance
+import matplotlib.pyplot as plt
 
 def pca_2d(*args):
     """
@@ -33,17 +34,34 @@ def pca_2d(*args):
 
     return result_list
 
-def nearest_neighbor(X, Y):
+def nearest_neighbor(search_point, data):
 
     min_dist = None
-    min_x_idx = None
-    min_y_idx = None
+    min_idx = None
+    min_indices = []
 
-    for i, x_row in enumerate(X):
-        for j, y_row in enumerate(Y):
-            d = distance.euclidean(x_row, y_row)
-            if min_dist is None or d < min_dist:
-                min_dist = d
-                min_x_idx = i
-                min_y_idx = j
-    return (min_dist, min_x_idx, min_y_idx)
+    for i, data_point in enumerate(data):
+        d = distance.euclidean(search_point, data_point)
+        if min_dist is None or d < min_dist:
+            min_dist = d
+            min_idx = i
+            min_indices.append(min_idx)
+    return (min_dist, min_idx, min_indices)
+
+def plot_data_2d(X, Y):
+    X_r, Y_r = pca_2d(X, Y)
+    print X_r.shape
+    print Y_r.shape
+    plt.plot(X_r[:, 0], X_r[:, 1], 'xb')
+    plt.plot(Y_r[:, 0], Y_r[:, 1], 'or')
+    plt.show()
+
+def plot_data_3d(X, Y, Z):
+    X_r, Y_r, Z_r = pca_2d(X, Y, Z)
+    plt.plot(X_r[:, 0], X_r[:, 1], 'xb')
+    plt.plot(Y_r[:, 0], Y_r[:, 1], '.r')
+    plt.plot(Z_r[:, 0], Z_r[:, 1], 'og')
+    plt.show()
+
+def add_jitter(data, loc=0.0, scale=0.05):
+    return data + np.random.normal(loc=loc, scale=scale, size=data.shape)
