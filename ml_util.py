@@ -53,15 +53,43 @@ def plot_data_2d(X, Y):
     print X_r.shape
     print Y_r.shape
     plt.plot(X_r[:, 0], X_r[:, 1], 'xb')
-    plt.plot(Y_r[:, 0], Y_r[:, 1], 'or')
+    plt.plot(Y_r[:, 0], Y_r[:, 1], '.g')
     plt.show()
 
 def plot_data_3d(X, Y, Z):
     X_r, Y_r, Z_r = pca_2d(X, Y, Z)
     plt.plot(X_r[:, 0], X_r[:, 1], 'xb')
-    plt.plot(Y_r[:, 0], Y_r[:, 1], '.r')
-    plt.plot(Z_r[:, 0], Z_r[:, 1], 'og')
+    plt.plot(Y_r[:, 0], Y_r[:, 1], '.g')
+    plt.plot(Z_r[:, 0], Z_r[:, 1], 'or')
     plt.show()
 
 def add_jitter(data, loc=0.0, scale=0.05):
     return data + np.random.normal(loc=loc, scale=scale, size=data.shape)
+
+def plot_data_with_tags(X, Y, x_tags, y_tags):
+
+    # PCA
+    X_r, Y_r = pca_2d(X, Y)
+
+    # begin plot
+    plt.figure()
+    # plot all points(first point is different color)
+    plt.plot(X_r[:, 0], X_r[:, 1], "xb")
+    plt.plot(Y_r[:, 0], Y_r[:, 1], "or")
+    # draw annotations
+    for label, x, y in zip(x_tags, X_r[:, 0], X_r[:, 1]):
+        plt.annotate(
+            label,
+            xy = (x, y), xytext = (-20, 20),
+            textcoords = 'offset points', ha = 'right', va = 'bottom',
+            # bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
+            arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+    for label, x, y in zip(y_tags, Y_r[:, 0], Y_r[:, 1]):
+        plt.annotate(
+            label,
+            xy = (x, y), xytext = (-20, 20),
+            textcoords = 'offset points', ha = 'right', va = 'bottom',
+            # bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
+            arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+    plt.title('PCA')
+    plt.show()

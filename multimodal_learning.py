@@ -105,6 +105,6 @@ if __name__== "__main__":
     # plot_images_by_tag("cow")
     # plot_cca_result()
 
-    # id = 22
-    # plot_img_data(id)
-    # nn_by_img(id)
+    id = 8
+    plot_img_data(id)
+    nn_by_img(id)

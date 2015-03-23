@@ -264,6 +264,7 @@ class Joint:
         for dataset_idx in nn_dataset_indices:
             self.flickr.plot_image_with_tags_by_id(dataset_idx)
 
+
     def plot_img_data(self, search_dataset_id, n_components=10):
         Y_c = self.cca.Y_c[:, 0:n_components]
         print Y_c.shape
@@ -289,13 +290,22 @@ class Joint:
         feature_idx = self.flickr.img_label.tolist().index(search_dataset_id - 1 )
 
         # calc nearest neighbors
-        nn = NearestNeighbors(n_neighbors=200, algorithm='ball_tree').fit(X_c)
-        nn_indices = nn.kneighbors([Y_s[feature_idx]], 200, return_distance=False)
+        nn = NearestNeighbors(n_neighbors=20).fit(X_c)
+        nn_indices = nn.kneighbors([Y_s[feature_idx]], 20, return_distance=False)
 
         # transform image feature indices to dataset indices
         nn_tags = list(set([self.flickr.tag_label[idx] for idx in nn_indices[0]]))
+        # show tags & plot image
         print nn_tags
         self.flickr.plot_img_by_id(search_dataset_id)
+
+        # plot image & nearest tags
+        ml.plot_data_with_tags(
+            X_c[nn_indices[0]],
+            np.array([Y_s[feature_idx]]),
+            self.flickr.tag_label[nn_indices][0],
+            np.array(["IMAGE"])
+        )
 
     def plot_img_by_tag(self, tag):
         self.flickr.load_tag_list(self.output_dir_path + Joint.TAG_LIST_SAVE_FILE)
