@@ -257,7 +257,8 @@ class Joint:
         dists, nn_indices = nn.kneighbors([tag_data_mean], 200, return_distance=True)
 
         # transform image feature indices to dataset indices
-        nn_dataset_indices = list(set([self.flickr.img_label[idx] + 1 for idx in nn_indices[0]]))
+        nn_dataset_indices_dup = [self.flickr.img_label[idx] + 1 for idx in nn_indices[0]]
+        nn_dataset_indices = list(sorted(set(nn_dataset_indices_dup), key=nn_dataset_indices_dup.index))
 
         # plot nearest images
         for dataset_idx in nn_dataset_indices:
@@ -287,12 +288,14 @@ class Joint:
         feature_idx = self.flickr.img_label.tolist().index(search_dataset_id - 1 )
 
         # calc nearest neighbors
-        nn = NearestNeighbors(n_neighbors=100).fit(X_c)
-        dists, nn_indices = nn.kneighbors([Y_s[feature_idx]], 100, return_distance=True)
+        nn = NearestNeighbors(n_neighbors=50).fit(X_c)
+        dists, nn_indices = nn.kneighbors([Y_s[feature_idx]], 50, return_distance=True)
+        print dists
         print nn_indices
 
         # transform image feature indices to dataset indices
-        nn_tags = list(set([self.flickr.tag_label[idx] for idx in nn_indices[0]]))
+        nn_tags_dup = [self.flickr.tag_label[idx] for idx in nn_indices[0]]
+        nn_tags = list(sorted(set(nn_tags_dup), key=nn_tags_dup.index))
         # show tags & plot image
         print nn_tags
         self.flickr.plot_img_by_id(search_dataset_id)

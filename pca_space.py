@@ -29,7 +29,7 @@ class PCASpace:
 
         data_t = self.transform(data)
         # plot all points
-        plt.plot(data_t[:, 0], data_t[:, 1], "xb")
+        plt.plot(data_t[:, 0], data_t[:, 1], "xb", zorder=4)
         # draw annotations
         for label, x, y in zip(labels, data_t[:, 0], data_t[:, 1]):
             plt.annotate(
@@ -37,7 +37,9 @@ class PCASpace:
                 xy = (x, y), xytext = (-20, 20),
                 textcoords = 'offset points', ha = 'right', va = 'bottom',
                 # bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
-                arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+                arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'),
+                zorder=4
+            )
 
     def __plot_points_with_img(self, data, images):
 
@@ -59,13 +61,12 @@ class PCASpace:
                 xycoords='data',
                 boxcoords="offset points"
             )
-            ab.set_zorder(0)
+            ab.set_zorder(3)
             ax.add_artist(ab)
 
     def plot_data_with_tag_img(self, X, x_labels, Y, y_img_paths):
 
         images = [plt.imread(img) for img in y_img_paths]
-        print images[0]
         # begin plot
         plt.figure()
         self.__plot_points_with_img(Y, images)

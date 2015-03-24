@@ -105,14 +105,14 @@ if __name__== "__main__":
     # transform_cca()
     # create_labels()
 
-    # word = "cat"
+    # word = "dog"
     # plot_tag_img_pairs("horse")
     # plot_tag_data(word)
     # nn_by_tag(word)
     # plot_images_by_tag("cow")
     # plot_cca_result()
 
-    id = 9
+    id = 164
     plot_img_data(id)
     nn_by_img(id)
 
