@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
+from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 
 def pca_2d(*args):
     """
@@ -66,7 +67,7 @@ def plot_data_3d(X, Y, Z):
 def add_jitter(data, loc=0.0, scale=0.05):
     return data + np.random.normal(loc=loc, scale=scale, size=data.shape)
 
-def plot_data_with_tags(X, Y, x_tags, y_tags):
+def plot_data_with_tags(X, Y, x_labels, y_labels):
 
     # PCA
     X_r, Y_r = pca_2d(X, Y)
@@ -77,19 +78,54 @@ def plot_data_with_tags(X, Y, x_tags, y_tags):
     plt.plot(X_r[:, 0], X_r[:, 1], "xb")
     plt.plot(Y_r[:, 0], Y_r[:, 1], "or")
     # draw annotations
-    for label, x, y in zip(x_tags, X_r[:, 0], X_r[:, 1]):
+    for label, x, y in zip(x_labels, X_r[:, 0], X_r[:, 1]):
         plt.annotate(
             label,
             xy = (x, y), xytext = (-20, 20),
             textcoords = 'offset points', ha = 'right', va = 'bottom',
             # bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
             arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
-    for label, x, y in zip(y_tags, Y_r[:, 0], Y_r[:, 1]):
+    for label, x, y in zip(y_labels, Y_r[:, 0], Y_r[:, 1]):
         plt.annotate(
             label,
             xy = (x, y), xytext = (-20, 20),
             textcoords = 'offset points', ha = 'right', va = 'bottom',
             # bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
             arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+    plt.title('PCA')
+    plt.show()
+
+def plot_data_with_img(X, x_img_labels, Y, y_tag_labels):
+
+    # PCA
+    X_r, Y_r = pca_2d(X, Y)
+
+    # begin plot
+    # plot all points(first point is different color)
+    plt.plot(X_r[:, 0], X_r[:, 1], "xb")
+    plt.plot(Y_r[:, 0], Y_r[:, 1], "ob")
+    # draw images
+    for label, x, y in zip(x_img_labels, X_r[:, 0], X_r[:, 1]):
+
+        # add a first image
+        arr_hand = plt.imread('/Users/rupy/dataset/mirflickr/im%d.jpg' % label)
+        imagebox = OffsetImage(arr_hand, zoom=.1)
+        xy = [x, y]               # coordinates to position this image
+
+        ab = AnnotationBbox(imagebox, xy,
+            # xybox=(arr_hand.shape[1] * 0.1 / 2, -arr_hand.shape[0] * 0.1 / 2),
+            xybox=(0, 0),
+            xycoords='data',
+            boxcoords="offset points")
+        plt.gcf().gca().add_artist(ab)
+
+    for label, x, y in zip(y_tag_labels, Y_r[:, 0], Y_r[:, 1]):
+        plt.annotate(
+            label,
+            xy = (x, y), xytext = (-20, 20),
+            textcoords = 'offset points', ha = 'right', va = 'bottom',
+            # bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
+            arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+    plt.grid(True)
     plt.title('PCA')
     plt.show()

@@ -51,6 +51,8 @@ class MyCCA(object):
         self.Y_pc = None
         self.Z_pc = None
 
+        self.Y_s = None
+
     def get_params(self):
         print "===================="
         print "  CCA parameters    "
@@ -287,6 +289,11 @@ class MyCCA(object):
 
     def corrcoef(self):
         return np.corrcoef(self.X_c[:,0], self.Y_c[:,0])
+
+    def fix_reverse(self):
+        cor = [np.corrcoef(self.X_c[:, i], self.Y_c[:, i])[0, 1] for i in xrange(self.X_c.shape[1])]
+        cor_signs = np.sign(cor)
+        self.Y_s = self.Y_c * cor_signs
 
 if __name__=="__main__":
 

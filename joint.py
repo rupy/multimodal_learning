@@ -17,6 +17,7 @@ from scipy.spatial import distance
 import ml_util as ml
 from scipy import stats
 from sklearn.neighbors import NearestNeighbors
+from pca_space import PCASpace
 
 class Joint:
 
@@ -59,6 +60,7 @@ class Joint:
         self.word2vec = Word2VecUtil()
         self.flickr = FlickrDataSet(self.annotation_path, self.dataset_path)
         self.cca = MyCCA(n_components=10, reg_param=0.1, calc_time=True)
+        self.pca_space = PCASpace()
 
     def learn_wiki_corpus(self, size=200):
         """
@@ -166,6 +168,9 @@ class Joint:
                 np.save(self.output_dir_path + 'cca/cca_' + str(n) + 'x.npy', x_c)
                 np.save(self.output_dir_path + 'cca/cca_' + str(n) + 'y.npy', y_c)
 
+        self.cca.fix_reverse()
+
+
     def load_transformed_data(self, probabilistic=False, n_components=200):
         """
         Load transfromed feature data by CCA. the data is calculated by fit_data_by_cca().
@@ -190,6 +195,8 @@ class Joint:
             self.cca.X_c = x_c
             self.cca.Y_c = y_c
 
+        self.cca.fix_reverse()
+
         return x_c, y_c, z
 
     def plot_transformed_data(self, probabilistic=False):
@@ -213,9 +220,12 @@ class Joint:
         self.flickr.load_tag_label(self.output_dir_path + Joint.TAG_LABEL_SAVE_FILE)
         self.flickr.load_img_label(self.output_dir_path + Joint.IMG_LABEL_SAVE_FILE)
 
+    def pca_fit(self, n_components=10):
+        all_data = np.vstack([self.cca.X_c[:, 0:n_components], self.cca.X_c[:, 0:n_components]])
+        self.pca_space.fit(all_data)
+
     def plot_tag_data(self, search_tag, n_components=10):
         X_c = self.cca.X_c[:, 0:n_components]
-        print X_c.shape
 
         # tag-img pair is not only one pair
         indices = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag == search_tag ]
@@ -225,10 +235,7 @@ class Joint:
 
     def plot_tag_img_pairs(self, search_tag, n_components=10):
         X_c = self.cca.X_c[:, 0:n_components]
-        Y_c = self.cca.Y_c[:, 0:n_components]
-        contribution = [np.corrcoef(X_c[:, i], Y_c[:, i])[0, 1] for i in xrange(X_c.shape[1])]
-        cor_signs = np.sign(contribution)
-        Y_s = Y_c * cor_signs
+        Y_s = self.cca.Y_s[:, 0:n_components]
 
         # tag-img pair is not only one pair
         indices = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag == search_tag ]
@@ -238,15 +245,7 @@ class Joint:
     def tag_nearest_neighbor(self, search_tag, n_components=10):
 
         X_c = self.cca.X_c[:, 0:n_components]
-        Y_c = self.cca.Y_c[:, 0:n_components]
-        print X_c.shape
-        print Y_c.shape
-        # correct direction
-        contribution = [np.corrcoef(X_c[:, i], Y_c[:, i])[0, 1] for i in xrange(X_c.shape[1])]
-        print contribution
-        cor_signs = np.sign(contribution)
-        print cor_signs
-        Y_s = Y_c * cor_signs
+        Y_s = self.cca.Y_s[:, 0:n_components]
 
         # tag-img pair is not only one pair
         indices = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag == search_tag ]
@@ -255,7 +254,7 @@ class Joint:
 
         # calc nearest neighbors
         nn = NearestNeighbors(n_neighbors=2, algorithm='ball_tree').fit(Y_s)
-        nn_indices = nn.kneighbors([tag_data_mean], 200, return_distance=False)
+        dists, nn_indices = nn.kneighbors([tag_data_mean], 200, return_distance=True)
 
         # transform image feature indices to dataset indices
         nn_dataset_indices = list(set([self.flickr.img_label[idx] + 1 for idx in nn_indices[0]]))
@@ -264,10 +263,14 @@ class Joint:
         for dataset_idx in nn_dataset_indices:
             self.flickr.plot_image_with_tags_by_id(dataset_idx)
 
+        # ml.plot_data_with_img(Y_s[nn_dataset_indices], nn_dataset_indices, np.array(tag_data_mean), [search_tag])
+        dataset_paths = [self.flickr.dataset_dir_path + "im%d.jpg" % idx for idx in nn_dataset_indices]
+        self.pca_space.plot_data_with_tag_img(np.array(tag_data_mean), [search_tag], Y_s[nn_dataset_indices], dataset_paths)
+
+
 
     def plot_img_data(self, search_dataset_id, n_components=10):
         Y_c = self.cca.Y_c[:, 0:n_components]
-        print Y_c.shape
 
         # tag-img pair is not only one pair
         indices = [idx for idx, dataset_idx in enumerate(self.flickr.img_label) if dataset_idx == search_dataset_id - 1 ]
@@ -278,20 +281,15 @@ class Joint:
     def img_nearest_neighbor(self, search_dataset_id, n_components=10):
 
         X_c = self.cca.X_c[:, 0:n_components]
-        Y_c = self.cca.Y_c[:, 0:n_components]
-        print X_c.shape
-        print Y_c.shape
-        # correct direction
-        contribution = [np.corrcoef(X_c[:, i], Y_c[:, i])[0, 1] for i in xrange(X_c.shape[1])]
-        cor_signs = np.sign(contribution)
-        Y_s = Y_c * cor_signs
+        Y_s = self.cca.Y_s[:, 0:n_components]
 
         # get feature index from dataset index
         feature_idx = self.flickr.img_label.tolist().index(search_dataset_id - 1 )
 
         # calc nearest neighbors
-        nn = NearestNeighbors(n_neighbors=20).fit(X_c)
-        nn_indices = nn.kneighbors([Y_s[feature_idx]], 20, return_distance=False)
+        nn = NearestNeighbors(n_neighbors=100).fit(X_c)
+        dists, nn_indices = nn.kneighbors([Y_s[feature_idx]], 100, return_distance=True)
+        print nn_indices
 
         # transform image feature indices to dataset indices
         nn_tags = list(set([self.flickr.tag_label[idx] for idx in nn_indices[0]]))
@@ -299,12 +297,11 @@ class Joint:
         print nn_tags
         self.flickr.plot_img_by_id(search_dataset_id)
 
-        # plot image & nearest tags
-        ml.plot_data_with_tags(
+        self.pca_space.plot_data_with_tag_img(
             X_c[nn_indices[0]],
-            np.array([Y_s[feature_idx]]),
             self.flickr.tag_label[nn_indices][0],
-            np.array(["IMAGE"])
+            np.array([Y_s[feature_idx]]),
+            [self.flickr.dataset_dir_path + "im%d.jpg" % search_dataset_id]
         )
 
     def plot_img_by_tag(self, tag):
@@ -347,6 +344,8 @@ class Joint:
 
         plt.show()
 
+    def plot_img_in_plot(self, img_id):
+        ml.plot_data_with_img(np.array([[1,1], [2,2]]), [1,2],np.array([[1.5,1.5], [1.5,3.0]]), ["a","b"])
 
 if __name__=="__main__":
 
