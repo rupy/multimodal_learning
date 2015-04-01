@@ -23,7 +23,6 @@ class Word2VecUtil:
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
 
         self.model = None
-        self.word_vector_df = None
 
     def learn_word2vec(self, corpus_file, save_file=None, size=200):
         self.logger.info("reading corpus file")

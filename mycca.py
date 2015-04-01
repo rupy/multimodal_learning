@@ -45,11 +45,7 @@ class MyCCA(object):
         # transformed data by CCA
         self.X_c = None
         self.Y_c = None
-
-        # transformed data by PCCA
-        self.X_pc = None
-        self.Y_pc = None
-        self.Z_pc = None
+        self.Z_c = None
 
         self.Y_s = None
 
@@ -147,14 +143,9 @@ class MyCCA(object):
         x = self.normalize(x)
         y = self.normalize(y)
 
-        # self.X = x
-        # self.Y = y
-
         self.logger.info("transform matrices by CCA")
-        # print x.shape, x_eigvecs[:,:dim].shape
-        # print y.shape, y_eigvecs[:,:dim].shape
-        x_projected = np.dot(x, self.x_weights[:,:self.n_components])
-        y_projected = np.dot(y, self.y_weights[:,:self.n_components])
+        x_projected = np.dot(x, self.x_weights)
+        y_projected = np.dot(y, self.y_weights)
 
         self.X_c = x_projected
         self.Y_c = y_projected
@@ -164,13 +155,7 @@ class MyCCA(object):
     def ptransform(self, x, y, beta=0.5):
 
         start = time.time()
-        print x.shape
-        x = self.normalize(x)
-        y = self.normalize(y)
-
-        # print x.shape, self.x_weights_.shape
-        x_projected = np.dot(x, self.x_weights)
-        y_projected = np.dot(y, self.y_weights)
+        x_projected, y_projected = self.transform(x, y)
 
         I = np.eye(len(self.eigvals))
         lamb = np.diag(self.eigvals)
@@ -182,15 +167,15 @@ class MyCCA(object):
         # print lamb.shape, lamb
         p = np.vstack((lamb**beta, lamb**(1-beta)))
         q = np.vstack((x_projected.T, y_projected.T))
-        print p.T.shape, mat.shape, q.shape
+        # print p.T.shape, mat.shape, q.shape
         z = np.dot(p.T, np.dot(mat, q)).T[:,:self.n_components]
 
         if self.calc_time:
             print "Transforming done in %.2f sec." % (time.time() - start)
 
-        self.X_pc = x_projected
-        self.Y_pc = y_projected
-        self.Z_pc = z
+        self.X_c = x_projected
+        self.Y_c = y_projected
+        self.Z_c = z
 
         return x_projected, y_projected, z
 
@@ -238,16 +223,16 @@ class MyCCA(object):
                and self.Cyy is not None\
                and self.Cxy is not None
 
-    def plot_cca_result(self, probabilistic=False):
+    def plot_cca_result(self, probabilistic=True):
 
         X = None
         Y = None
         Z = None
         if probabilistic:
             self.logger.info("plotting PCCA")
-            X = self.X_pc
-            Y = self.Y_pc
-            Z = self.Z_pc
+            X = self.X_c
+            Y = self.Y_c
+            Z = self.Z_c
         else:
             self.logger.info("plotting CCA")
             X = self.X_c

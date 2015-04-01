@@ -31,10 +31,6 @@ def transform_cca():
     joint = Joint()
     joint.transform_data()
 
-def transform_pcca():
-    joint = Joint()
-    joint.transform_data(probabilistic=True)
-
 def print_corrcoef():
     joint = Joint()
     joint.load_transformed_data()
@@ -44,11 +40,6 @@ def plot_cca_result():
     joint = Joint()
     joint.load_transformed_data()
     joint.plot_transformed_data()
-
-def plot_pcca_result():
-    joint = Joint()
-    joint.load_transformed_data(probabilistic=True)
-    joint.plot_transformed_data(probabilistic=True)
 
 def create_labels():
     joint = Joint()
@@ -98,8 +89,9 @@ def plot_image_in_plot(img_id):
 if __name__== "__main__":
 
     logging.root.setLevel(level=logging.INFO)
-    # fit_and_transform_by_cca()
-    # plot_pcca_result()
+    # transform_cca()
+    # plot_cca_result()
+    # exit()
 
     # transform_pcca()
     # transform_cca()

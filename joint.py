@@ -137,9 +137,9 @@ class Joint:
         # save
         self.cca.save_params_as_pickle(self.output_dir_path + Joint.CCA_PARAMS_SAVE_DIR)
 
-    def transform_data(self, probabilistic=False):
+    def transform_data(self):
         """
-        Transform feature data by CCA or PCCA changing n_components from 10 to 200. Results of CCA (or PCCA) transformation are saved at the end of calculation.
+        Transform feature data by CCA(PCCA). Results of CCA (or PCCA) transformation are saved at the end of calculation.
         :param probabilistic: False if use CCA and True if use PCCA.
         :return: None
         """
@@ -152,26 +152,15 @@ class Joint:
         self.cca.load_params_from_pickle(self.output_dir_path + Joint.CCA_PARAMS_SAVE_DIR)
 
         # transform and save
-        for n in xrange(10, 210, 10):
-            if probabilistic:
-                self.logger.info("pcca transform: n_components is %d", n)
-                self.cca.n_components = n
-
-                x_c, y_c, z = self.cca.ptransform(self.word2vec.word_vector_mat, self.flickr.features_mat)
-                np.save(self.output_dir_path + 'cca/pcca_' + str(n) + 'x.npy', x_c)
-                np.save(self.output_dir_path + 'cca/pcca_' + str(n) + 'y.npy', y_c)
-                np.save(self.output_dir_path + 'cca/pcca_' + str(n) + 'z.npy', z)
-            else:
-                self.logger.info("cca transform: n_components is %d", n)
-                self.cca.n_components = n
-                x_c, y_c = self.cca.transform(self.word2vec.word_vector_mat, self.flickr.features_mat)
-                np.save(self.output_dir_path + 'cca/cca_' + str(n) + 'x.npy', x_c)
-                np.save(self.output_dir_path + 'cca/cca_' + str(n) + 'y.npy', y_c)
+        x_c, y_c, z_c = self.cca.ptransform(self.word2vec.word_vector_mat, self.flickr.features_mat)
+        np.save(self.output_dir_path + 'cca/cca_x.npy', x_c)
+        np.save(self.output_dir_path + 'cca/cca_y.npy', y_c)
+        np.save(self.output_dir_path + 'cca/cca_z.npy', z_c)
 
         self.cca.fix_reverse()
 
 
-    def load_transformed_data(self, probabilistic=False, n_components=200):
+    def load_transformed_data(self, probabilistic=True, n_components=200):
         """
         Load transfromed feature data by CCA. the data is calculated by fit_data_by_cca().
         :param probabilistic: False if use CCA and True if use PCCA.
@@ -179,27 +168,21 @@ class Joint:
         :return: None
         """
 
-        x_c = None
-        y_c = None
-        z = None
+        self.cca.n_components = n_components
+        x_c = np.load(self.output_dir_path + 'cca/cca_x.npy')
+        y_c = np.load(self.output_dir_path + 'cca/cca_y.npy')
+        self.cca.X_c = x_c
+        self.cca.Y_c = y_c
+        z_c = None
         if probabilistic:
-            x_c = np.load(self.output_dir_path + 'cca/pcca_' + str(n_components) + 'x.npy')
-            y_c = np.load(self.output_dir_path + 'cca/pcca_' + str(n_components) + 'y.npy')
-            z = np.load(self.output_dir_path + 'cca/pcca_' + str(n_components) + 'z.npy')
-            self.cca.X_pc = x_c
-            self.cca.Y_pc = y_c
-            self.cca.Z_pc = z
-        else:
-            x_c = np.load(self.output_dir_path + 'cca/cca_' + str(n_components) + 'x.npy')
-            y_c = np.load(self.output_dir_path + 'cca/cca_' + str(n_components) + 'y.npy')
-            self.cca.X_c = x_c
-            self.cca.Y_c = y_c
+            z_c = np.load(self.output_dir_path + 'cca/cca_z.npy')
+            self.cca.Z_c = z_c
 
         self.cca.fix_reverse()
 
-        return x_c, y_c, z
+        return x_c, y_c, z_c
 
-    def plot_transformed_data(self, probabilistic=False):
+    def plot_transformed_data(self, probabilistic=True):
         """
         Plot transformed data by CCA. The data is compressed by PCA and plotted.
         :param probabilistic: False if use CCA and True if use PCCA.
