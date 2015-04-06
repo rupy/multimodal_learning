@@ -137,6 +137,21 @@ class Joint:
         # save
         self.cca.save_params_as_pickle(self.output_dir_path + Joint.CCA_PARAMS_SAVE_DIR)
 
+    def plot_original_data(self):
+        """
+        plot original two data.
+        :return: None
+        """
+
+        # preparation
+        self.flickr.load_img_features(self.output_dir_path + Joint.FEATURE_SAVE_FILE)
+        self.logger.info("features_mat shape is %s", self.flickr.features_mat.shape)
+        self.word2vec.load_word_features(self.output_dir_path + Joint.WORDVECTOR__SAVE_FILE)
+        self.logger.info("word_vector_mat shape is %s", self.word2vec.word_vector_mat.shape)
+
+        # plot
+        self.cca.plot_original_data(self.word2vec.word_vector_mat, self.flickr.features_mat)
+
     def transform_data(self):
         """
         Transform feature data by CCA(PCCA). Results of CCA (or PCCA) transformation are saved at the end of calculation.
@@ -214,7 +229,8 @@ class Joint:
         indices = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag == search_tag ]
         indices_not = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag != search_tag]
 
-        ml.plot_data_3d(X_c[indices_not], ml.add_jitter(X_c[indices]), stats.trim_mean(X_c[indices], 0.1) )
+        avg = stats.trim_mean(X_c[indices], 0.1)
+        ml.plot_3_data(X_c[indices_not], ml.add_jitter(X_c[indices]), avg )
 
     def plot_tag_img_pairs(self, search_tag, n_components=10):
         X_c = self.cca.X_c[:, 0:n_components]
@@ -223,7 +239,7 @@ class Joint:
         # tag-img pair is not only one pair
         indices = [idx for idx, tag in enumerate(self.flickr.tag_label) if tag == search_tag ]
 
-        ml.plot_data_2d(ml.add_jitter(X_c[indices]), ml.add_jitter(Y_s[indices]))
+        ml.plot_2_data(ml.add_jitter(X_c[indices]), ml.add_jitter(Y_s[indices]))
 
     def tag_nearest_neighbor(self, search_tag, n_components=10):
 
@@ -260,7 +276,7 @@ class Joint:
         indices = [idx for idx, dataset_idx in enumerate(self.flickr.img_label) if dataset_idx == search_dataset_id - 1 ]
         indices_not = [idx for idx, dataset_idx in enumerate(self.flickr.tag_label) if dataset_idx != search_dataset_id - 1]
 
-        ml.plot_data_3d(Y_c[indices_not], ml.add_jitter(Y_c[indices]),Y_c[indices[0]] )
+        ml.plot_3_data(Y_c[indices_not], ml.add_jitter(Y_c[indices]),Y_c[indices[0]] )
 
     def img_nearest_neighbor(self, search_dataset_id, n_components=10):
 

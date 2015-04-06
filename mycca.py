@@ -223,6 +223,18 @@ class MyCCA(object):
                and self.Cyy is not None\
                and self.Cxy is not None
 
+    def plot_original_data(self, X, Y):
+        plt.subplot(221)
+        plt.plot(X[:, 0], X[:, 1], 'xb')
+        plt.title('X')
+
+        plt.subplot(222)
+        plt.plot(Y[:, 0], Y[:, 1], '.r')
+        plt.title('Y')
+
+        plt.show()
+
+
     def plot_cca_result(self, probabilistic=True):
 
         X = None

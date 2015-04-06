@@ -49,7 +49,7 @@ def nearest_neighbor(search_point, data):
             min_indices.append(min_idx)
     return (min_dist, min_idx, min_indices)
 
-def plot_data_2d(X, Y):
+def plot_2_data(X, Y):
     X_r, Y_r = pca_2d(X, Y)
     print X_r.shape
     print Y_r.shape
@@ -57,7 +57,7 @@ def plot_data_2d(X, Y):
     plt.plot(Y_r[:, 0], Y_r[:, 1], '.g')
     plt.show()
 
-def plot_data_3d(X, Y, Z):
+def plot_3_data(X, Y, Z):
     X_r, Y_r, Z_r = pca_2d(X, Y, Z)
     plt.plot(X_r[:, 0], X_r[:, 1], 'xb')
     plt.plot(Y_r[:, 0], Y_r[:, 1], '.g')

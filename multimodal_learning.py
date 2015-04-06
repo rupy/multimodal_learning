@@ -51,18 +51,18 @@ def plot_tag_data(search_tag):
     joint.load_labels()
     joint.plot_tag_data(search_tag)
 
-def plot_tag_img_pairs(search_tag):
+def plot_tag_img_pairs(search_tag, n_components=50):
     joint = Joint()
     joint.load_transformed_data()
     joint.load_labels()
-    joint.plot_tag_img_pairs(search_tag, 30)
+    joint.plot_tag_img_pairs(search_tag, n_components)
 
-def nn_by_tag(search_tag):
+def nn_by_tag(search_tag, n_components=50):
     joint = Joint()
     joint.load_transformed_data()
-    joint.pca_fit(30)
+    joint.pca_fit(n_components)
     joint.load_labels()
-    joint.tag_nearest_neighbor(search_tag, 30)
+    joint.tag_nearest_neighbor(search_tag, n_components)
 
 def plot_img_data(dataset_idx):
     joint = Joint()
@@ -70,12 +70,12 @@ def plot_img_data(dataset_idx):
     joint.load_labels()
     joint.plot_img_data(dataset_idx)
 
-def nn_by_img(dataset_id):
+def nn_by_img(dataset_id, n_components=50):
     joint = Joint()
     joint.load_transformed_data()
-    joint.pca_fit(30)
+    joint.pca_fit(n_components)
     joint.load_labels()
-    joint.img_nearest_neighbor(dataset_id, 30)
+    joint.img_nearest_neighbor(dataset_id, n_components)
 
 def plot_images_by_tag(search_tag):
     joint = Joint()
@@ -84,6 +84,11 @@ def plot_images_by_tag(search_tag):
 def plot_image_in_plot(img_id):
     joint = Joint()
     joint.plot_img_in_plot(img_id)
+
+def plot_original_data():
+    joint = Joint()
+    joint.plot_original_data()
+
 
 
 if __name__== "__main__":
@@ -97,16 +102,16 @@ if __name__== "__main__":
     # transform_cca()
     # create_labels()
 
-    # word = "dog"
+    # word = "jacket"
     # plot_tag_img_pairs("horse")
     # plot_tag_data(word)
-    # nn_by_tag(word)
+    # nn_by_tag(word, 50)
     # plot_images_by_tag("cow")
-    # plot_cca_result()
 
-    id = 164
+    id = 179
     plot_img_data(id)
     nn_by_img(id)
 
     # plot_image_in_plot(1)
+    # plot_original_data()
 
