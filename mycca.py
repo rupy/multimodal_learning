@@ -9,10 +9,6 @@ import time
 import logging
 import os
 import sys
-try:
-   import cPickle as pickle
-except:
-   import pickle
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
@@ -187,7 +183,7 @@ class MyCCA(object):
         self.fit(x, y)
         return self.ptransform(x, y, beta)
 
-    def save_params_as_pickle(self, filepath):
+    def save_params(self, filepath):
         data = [self.n_components, self.reg_param, self.x_weights , self.y_weights, self.eigvals, self.calc_time,
                 self.Cxx, self.Cyy, self.Cxy]
         self.logger.info("saving cca")
@@ -201,7 +197,7 @@ class MyCCA(object):
         np.save(filepath + "cyy.npy", self.Cyy)
         np.save(filepath + "cxy.npy", self.Cxy)
 
-    def load_params_from_pickle(self, filepath):
+    def load_params(self, filepath):
         self.logger.info("loading cca")
         self.n_components = np.load(filepath + "n_components.npy")
         self.reg_param = np.load(filepath + "reg_param.npy")
